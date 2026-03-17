@@ -1,18 +1,38 @@
 import { useState, useEffect } from 'react';
-import { CalendarDays, UtensilsCrossed, Map, MapPin, Clock, Banknote, Info, CloudRain, Users, AlertCircle, CheckCircle2, BedDouble, Sun, Moon, CreditCard, Smartphone } from 'lucide-react';
-import { itineraryData, foodData, attractionData, creditCardData, promoData, ePayData } from './data';
+import { CalendarDays, UtensilsCrossed, Map, MapPin, Clock, Banknote, Info, CloudRain, Users, AlertCircle, CheckCircle2, BedDouble, Sun, Moon, CreditCard, Smartphone, MapPinned } from 'lucide-react';
+import { itineraryData, foodData, attractionData, creditCardData, promoData, ePayData, mapData } from './data';
 import { motion, AnimatePresence } from 'motion/react';
+import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
+import 'leaflet/dist/leaflet.css';
+import L from 'leaflet';
 
-type Tab = 'itinerary' | 'food' | 'attractions' | 'cards';
+// Fix Leaflet default icon issue
+delete (L.Icon.Default.prototype as any)._getIconUrl;
+L.Icon.Default.mergeOptions({
+  iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png',
+  iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png',
+  shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
+});
+
+type Tab = 'itinerary' | 'food' | 'attractions' | 'cards' | 'map';
 
 export default function App() {
   const [activeTab, setActiveTab] = useState<Tab>('itinerary');
+  const [isScrolled, setIsScrolled] = useState(false);
   const [isDarkMode, setIsDarkMode] = useState(() => {
     if (typeof window !== 'undefined') {
       return window.matchMedia('(prefers-color-scheme: dark)').matches;
     }
     return false;
   });
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setIsScrolled(window.scrollY > 20);
+    };
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
   useEffect(() => {
     if (isDarkMode) {
@@ -25,22 +45,24 @@ export default function App() {
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 font-sans pb-24 transition-colors duration-200">
       {/* Header */}
-      <header className="bg-white dark:bg-slate-900 shadow-sm dark:shadow-slate-800/50 sticky top-0 z-10 transition-colors duration-200">
-        <div className="max-w-3xl mx-auto px-4 py-5 flex items-center justify-between">
+      <header className={`bg-white/95 backdrop-blur-md dark:bg-slate-900/95 shadow-sm dark:shadow-slate-800/50 sticky top-0 z-10 transition-all duration-300 ${isScrolled ? 'py-2' : 'py-0'}`}>
+        <div className={`max-w-3xl mx-auto px-4 flex items-center justify-between transition-all duration-300 ${isScrolled ? 'py-1' : 'py-5'}`}>
           <div>
-            <h1 className="text-2xl font-bold text-teal-700 dark:text-teal-400 tracking-tight">名古屋親子遊</h1>
-            <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 font-medium">12天11夜 春季旅行指南</p>
+            <h1 className={`font-bold text-teal-700 dark:text-teal-400 tracking-tight transition-all duration-300 ${isScrolled ? 'text-lg' : 'text-2xl'}`}>名古屋親子遊</h1>
+            <div className={`overflow-hidden transition-all duration-300 ${isScrolled ? 'h-0 opacity-0' : 'h-5 opacity-100 mt-1'}`}>
+              <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">12天11夜 春季旅行指南</p>
+            </div>
           </div>
           <div className="flex items-center gap-3">
             <button 
               onClick={() => setIsDarkMode(!isDarkMode)}
-              className="p-2 rounded-xl text-slate-500 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800 transition-colors"
+              className={`rounded-xl text-slate-500 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800 transition-all duration-300 ${isScrolled ? 'p-1.5' : 'p-2'}`}
               aria-label="Toggle Dark Mode"
             >
-              {isDarkMode ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
+              {isDarkMode ? <Sun className={`transition-all duration-300 ${isScrolled ? 'w-4 h-4' : 'w-5 h-5'}`} /> : <Moon className={`transition-all duration-300 ${isScrolled ? 'w-4 h-4' : 'w-5 h-5'}`} />}
             </button>
-            <div className="bg-teal-50 dark:bg-teal-900/40 text-teal-700 dark:text-teal-400 p-2 rounded-xl">
-              <Map className="w-6 h-6" />
+            <div className={`bg-teal-50 dark:bg-teal-900/40 text-teal-700 dark:text-teal-400 rounded-xl transition-all duration-300 ${isScrolled ? 'p-1.5' : 'p-2'}`}>
+              <Map className={`transition-all duration-300 ${isScrolled ? 'w-4 h-4' : 'w-6 h-6'}`} />
             </div>
           </div>
         </div>
@@ -352,6 +374,48 @@ export default function App() {
               </div>
             </motion.div>
           )}
+          {activeTab === 'map' && (
+            <motion.div
+              key="map"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              transition={{ duration: 0.2 }}
+              className="h-[calc(100vh-160px)] flex flex-col"
+            >
+              <div className="flex-1 rounded-2xl overflow-hidden border border-slate-200 dark:border-slate-800 shadow-sm relative z-0">
+                <MapContainer 
+                  center={[35.1709, 136.8815]} 
+                  zoom={11} 
+                  style={{ height: '100%', width: '100%' }}
+                  className="z-0"
+                >
+                  <TileLayer
+                    attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                    url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                  />
+                  {mapData.map((item, idx) => (
+                    <Marker key={idx} position={[item.lat, item.lng]}>
+                      <Popup>
+                        <div className="p-1">
+                          <h3 className="font-bold text-sm mb-1">{item.name}</h3>
+                          <p className="text-xs text-slate-600">{item.description}</p>
+                          <span className={`inline-block mt-2 text-[10px] px-2 py-0.5 rounded-full ${
+                            item.type === 'hotel' ? 'bg-blue-100 text-blue-700' :
+                            item.type === 'attraction' ? 'bg-indigo-100 text-indigo-700' :
+                            item.type === 'food' ? 'bg-orange-100 text-orange-700' :
+                            'bg-slate-100 text-slate-700'
+                          }`}>
+                            {item.type === 'hotel' ? '住宿' : item.type === 'attraction' ? '景點' : item.type === 'food' ? '美食' : '交通'}
+                          </span>
+                        </div>
+                      </Popup>
+                    </Marker>
+                  ))}
+                </MapContainer>
+              </div>
+            </motion.div>
+          )}
         </AnimatePresence>
       </main>
 
@@ -360,38 +424,47 @@ export default function App() {
         <div className="max-w-md mx-auto flex justify-around p-2">
           <button
             onClick={() => setActiveTab('itinerary')}
-            className={`flex flex-col items-center justify-center w-16 py-2 rounded-xl transition-colors ${
+            className={`flex flex-col items-center justify-center w-14 py-2 rounded-xl transition-colors ${
               activeTab === 'itinerary' ? 'text-teal-600 dark:text-teal-400 bg-teal-50 dark:bg-teal-900/30' : 'text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300'
             }`}
           >
-            <CalendarDays className="w-6 h-6 mb-1" />
+            <CalendarDays className="w-5 h-5 mb-1" />
             <span className="text-[10px] font-medium">行程</span>
           </button>
           <button
             onClick={() => setActiveTab('food')}
-            className={`flex flex-col items-center justify-center w-16 py-2 rounded-xl transition-colors ${
+            className={`flex flex-col items-center justify-center w-14 py-2 rounded-xl transition-colors ${
               activeTab === 'food' ? 'text-orange-500 dark:text-orange-400 bg-orange-50 dark:bg-orange-900/30' : 'text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300'
             }`}
           >
-            <UtensilsCrossed className="w-6 h-6 mb-1" />
+            <UtensilsCrossed className="w-5 h-5 mb-1" />
             <span className="text-[10px] font-medium">美食</span>
           </button>
           <button
             onClick={() => setActiveTab('attractions')}
-            className={`flex flex-col items-center justify-center w-16 py-2 rounded-xl transition-colors ${
+            className={`flex flex-col items-center justify-center w-14 py-2 rounded-xl transition-colors ${
               activeTab === 'attractions' ? 'text-indigo-500 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-900/30' : 'text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300'
             }`}
           >
-            <Map className="w-6 h-6 mb-1" />
+            <Map className="w-5 h-5 mb-1" />
             <span className="text-[10px] font-medium">景點</span>
           </button>
           <button
+            onClick={() => setActiveTab('map')}
+            className={`flex flex-col items-center justify-center w-14 py-2 rounded-xl transition-colors ${
+              activeTab === 'map' ? 'text-emerald-500 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/30' : 'text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300'
+            }`}
+          >
+            <MapPinned className="w-5 h-5 mb-1" />
+            <span className="text-[10px] font-medium">地圖</span>
+          </button>
+          <button
             onClick={() => setActiveTab('cards')}
-            className={`flex flex-col items-center justify-center w-16 py-2 rounded-xl transition-colors ${
+            className={`flex flex-col items-center justify-center w-14 py-2 rounded-xl transition-colors ${
               activeTab === 'cards' ? 'text-rose-500 dark:text-rose-400 bg-rose-50 dark:bg-rose-900/30' : 'text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300'
             }`}
           >
-            <CreditCard className="w-6 h-6 mb-1" />
+            <CreditCard className="w-5 h-5 mb-1" />
             <span className="text-[10px] font-medium">刷卡</span>
           </button>
         </div>
