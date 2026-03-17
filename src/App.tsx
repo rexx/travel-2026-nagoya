@@ -16,6 +16,33 @@ L.Icon.Default.mergeOptions({
 
 type Tab = 'itinerary' | 'food' | 'attractions' | 'cards' | 'map';
 
+const getIcon = (type: string) => {
+  let bgColor = 'bg-slate-300';
+
+  switch (type) {
+    case 'hotel':
+      bgColor = 'bg-yellow-300';
+      break;
+    case 'attraction':
+      bgColor = 'bg-blue-300';
+      break;
+    case 'food':
+      bgColor = 'bg-orange-300';
+      break;
+    case 'transport':
+      bgColor = 'bg-emerald-300';
+      break;
+  }
+
+  return L.divIcon({
+    className: 'custom-leaflet-icon',
+    html: `<div class="w-5 h-5 rounded-full shadow-md border-2 border-white ${bgColor}"></div>`,
+    iconSize: [20, 20],
+    iconAnchor: [10, 10],
+    popupAnchor: [0, -10]
+  });
+};
+
 export default function App() {
   const [activeTab, setActiveTab] = useState<Tab>('itinerary');
   const [isScrolled, setIsScrolled] = useState(false);
@@ -61,9 +88,6 @@ export default function App() {
             >
               {isDarkMode ? <Sun className={`transition-all duration-300 ${isScrolled ? 'w-4 h-4' : 'w-5 h-5'}`} /> : <Moon className={`transition-all duration-300 ${isScrolled ? 'w-4 h-4' : 'w-5 h-5'}`} />}
             </button>
-            <div className={`bg-teal-50 dark:bg-teal-900/40 text-teal-700 dark:text-teal-400 rounded-xl transition-all duration-300 ${isScrolled ? 'p-1.5' : 'p-2'}`}>
-              <Map className={`transition-all duration-300 ${isScrolled ? 'w-4 h-4' : 'w-6 h-6'}`} />
-            </div>
           </div>
         </div>
       </header>
@@ -395,16 +419,16 @@ export default function App() {
                     url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
                   />
                   {mapData.map((item, idx) => (
-                    <Marker key={idx} position={[item.lat, item.lng]}>
+                    <Marker key={idx} position={[item.lat, item.lng]} icon={getIcon(item.type)}>
                       <Popup>
                         <div className="p-1">
                           <h3 className="font-bold text-sm mb-1">{item.name}</h3>
                           <p className="text-xs text-slate-600">{item.description}</p>
                           <span className={`inline-block mt-2 text-[10px] px-2 py-0.5 rounded-full ${
-                            item.type === 'hotel' ? 'bg-blue-100 text-blue-700' :
-                            item.type === 'attraction' ? 'bg-indigo-100 text-indigo-700' :
+                            item.type === 'hotel' ? 'bg-yellow-100 text-yellow-800' :
+                            item.type === 'attraction' ? 'bg-blue-100 text-blue-700' :
                             item.type === 'food' ? 'bg-orange-100 text-orange-700' :
-                            'bg-slate-100 text-slate-700'
+                            'bg-emerald-100 text-emerald-700'
                           }`}>
                             {item.type === 'hotel' ? '住宿' : item.type === 'attraction' ? '景點' : item.type === 'food' ? '美食' : '交通'}
                           </span>

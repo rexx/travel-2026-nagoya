@@ -88,7 +88,8 @@ export const ePayData: EPayItem[] = [
 export const mapData: MapItem[] = [
   { name: '名古屋站 (住宿/交通)', lat: 35.1709, lng: 136.8815, type: 'hotel', description: 'Day 2-5 住宿點，交通樞紐' },
   { name: '榮商圈 (住宿/購物)', lat: 35.1698, lng: 136.9082, type: 'hotel', description: 'Day 6-10 住宿點，購物天堂' },
-  { name: '中部國際機場', lat: 34.8584, lng: 136.8126, type: 'transport', description: 'Day 1 & 11 住宿點，進出門戶' },
+  { name: '中部國際機場', lat: 34.8584, lng: 136.8126, type: 'transport', description: '進出門戶' },
+  { name: '中部國際機場飯店', lat: 34.8592, lng: 136.8145, type: 'hotel', description: 'Day 1 & 11 住宿點，機場直結' },
   { name: '名古屋城', lat: 35.1848, lng: 136.8996, type: 'attraction', description: '名古屋地標，本丸御殿必看' },
   { name: '樂高樂園 (LEGOLAND)', lat: 35.0505, lng: 136.8436, type: 'attraction', description: '親子必去主題樂園' },
   { name: '吉卜力公園', lat: 35.1741, lng: 137.0583, type: 'attraction', description: '愛・地球博紀念公園內' },
