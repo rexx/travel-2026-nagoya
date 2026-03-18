@@ -17,20 +17,20 @@ L.Icon.Default.mergeOptions({
 type Tab = 'itinerary' | 'food' | 'attractions' | 'cards' | 'map';
 
 const getIcon = (type: string) => {
-  let bgColor = 'bg-[#D1C4B5]';
+  let bgColor = 'bg-[#B89578]';
 
   switch (type) {
     case 'hotel':
-      bgColor = 'bg-[#E8DCC4]';
+      bgColor = 'bg-[#D4AA5A]';
       break;
     case 'attraction':
-      bgColor = 'bg-[#C4D1E8]';
+      bgColor = 'bg-[#6F98D8]';
       break;
     case 'food':
-      bgColor = 'bg-[#E8C4B5]';
+      bgColor = 'bg-[#D98563]';
       break;
     case 'transport':
-      bgColor = 'bg-[#C4E8D1]';
+      bgColor = 'bg-[#67B88C]';
       break;
   }
 
