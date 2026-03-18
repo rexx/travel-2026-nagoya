@@ -75,7 +75,7 @@ export default function App() {
       <header className={`bg-white/95 backdrop-blur-md dark:bg-[#362F2B]/95 shadow-sm dark:shadow-[#2A2421]/50 sticky top-0 z-10 transition-all duration-300 ${isScrolled ? 'py-2' : 'py-0'}`}>
         <div className={`max-w-3xl mx-auto px-4 flex items-center justify-between transition-all duration-300 ${isScrolled ? 'py-1' : 'py-5'}`}>
           <div>
-            <h1 className={`font-bold text-[#4A3F35] dark:text-[#E2C07C] tracking-tight transition-all duration-300 ${isScrolled ? 'text-lg' : 'text-2xl'}`}>名古屋親子遊</h1>
+            <h1 className={`font-bold text-[#4A3F35] dark:text-[#E2C07C] tracking-tight transition-all duration-300 ${isScrolled ? 'text-lg' : 'text-2xl'} font-serif`}>名古屋親子遊</h1>
             <div className={`overflow-hidden transition-all duration-300 ${isScrolled ? 'h-0 opacity-0' : 'h-5 opacity-100 mt-1'}`}>
               <p className="text-xs text-[#8C7A6B] dark:text-[#A89F91] font-medium">12天11夜 春季旅行指南</p>
             </div>
@@ -105,7 +105,7 @@ export default function App() {
               className="space-y-4"
             >
               <div className="mb-6">
-                <h2 className="text-xl font-bold text-[#4A3F35] dark:text-[#FDF8F5] flex items-center gap-2">
+                <h2 className="text-xl font-bold text-[#4A3F35] dark:text-[#FDF8F5] flex items-center gap-2 font-serif">
                   <CalendarDays className="w-5 h-5 text-[#D9A0A5] dark:text-[#E2C07C]" />
                   行程總覽
                 </h2>
@@ -136,7 +136,7 @@ export default function App() {
                         )}
                       </div>
                       
-                      <h3 className="text-lg font-bold text-[#4A3F35] dark:text-[#FDF8F5] mb-2">{item.theme}</h3>
+                      <h3 className="text-lg font-bold text-[#4A3F35] dark:text-[#FDF8F5] mb-2 font-serif">{item.theme}</h3>
                       
                       <div className="space-y-2 mt-3">
                         <div className="flex items-start gap-2 text-sm text-[#6B5B4D] dark:text-[#D1C4B5]">
@@ -174,7 +174,7 @@ export default function App() {
               transition={{ duration: 0.2 }}
             >
               <div className="mb-6">
-                <h2 className="text-xl font-bold text-[#4A3F35] dark:text-[#FDF8F5] flex items-center gap-2">
+                <h2 className="text-xl font-bold text-[#4A3F35] dark:text-[#FDF8F5] flex items-center gap-2 font-serif">
                   <UtensilsCrossed className="w-5 h-5 text-[#D9A0A5] dark:text-[#E2C07C]" />
                   美食指南
                 </h2>
@@ -185,7 +185,7 @@ export default function App() {
                 {foodData.map((item, idx) => (
                   <div key={idx} className="bg-white dark:bg-[#362F2B] p-4 rounded-2xl shadow-sm border border-[#F0E5E1] dark:border-[#4A3F35] hover:shadow-md transition-all duration-200">
                     <div className="flex justify-between items-start mb-2">
-                      <h3 className="text-base font-bold text-[#4A3F35] dark:text-[#FDF8F5] leading-tight">{item.name}</h3>
+                      <h3 className="text-base font-bold text-[#4A3F35] dark:text-[#FDF8F5] leading-tight font-serif">{item.name}</h3>
                       <span className="text-[10px] font-medium text-orange-600 dark:text-[#E2C07C] bg-[#FDF8F5] dark:bg-[#E2C07C]/20 px-2 py-1 rounded-md whitespace-nowrap ml-2">
                         {item.type}
                       </span>
@@ -235,7 +235,7 @@ export default function App() {
               transition={{ duration: 0.2 }}
             >
               <div className="mb-6">
-                <h2 className="text-xl font-bold text-[#4A3F35] dark:text-[#FDF8F5] flex items-center gap-2">
+                <h2 className="text-xl font-bold text-[#4A3F35] dark:text-[#FDF8F5] flex items-center gap-2 font-serif">
                   <Map className="w-5 h-5 text-[#D9A0A5] dark:text-[#E2C07C]" />
                   景點總覽
                 </h2>
@@ -246,7 +246,7 @@ export default function App() {
                 {attractionData.map((item, idx) => (
                   <div key={idx} className="bg-white dark:bg-[#362F2B] p-4 rounded-2xl shadow-sm border border-[#F0E5E1] dark:border-[#4A3F35] hover:shadow-md transition-all duration-200">
                     <div className="flex justify-between items-start mb-2">
-                      <h3 className="text-base font-bold text-[#4A3F35] dark:text-[#FDF8F5] leading-tight pr-2">{item.name}</h3>
+                      <h3 className="text-base font-bold text-[#4A3F35] dark:text-[#FDF8F5] leading-tight pr-2 font-serif">{item.name}</h3>
                       <span className="text-[10px] font-medium text-indigo-600 dark:text-[#E2C07C] bg-[#FDF8F5] dark:bg-[#E2C07C]/20 px-2 py-1 rounded-md whitespace-nowrap shrink-0">
                         {item.type}
                       </span>
@@ -300,7 +300,7 @@ export default function App() {
               transition={{ duration: 0.2 }}
             >
               <div className="mb-6">
-                <h2 className="text-xl font-bold text-[#4A3F35] dark:text-[#FDF8F5] flex items-center gap-2">
+                <h2 className="text-xl font-bold text-[#4A3F35] dark:text-[#FDF8F5] flex items-center gap-2 font-serif">
                   <CreditCard className="w-5 h-5 text-[#D9A0A5] dark:text-[#E2C07C]" />
                   刷卡與支付攻略
                 </h2>
@@ -311,7 +311,7 @@ export default function App() {
               <div className="mb-8 bg-gradient-to-br from-rose-50 to-orange-50 dark:from-[#E2C07C]/10 dark:to-[#C5A059]/10 p-5 rounded-2xl border border-rose-100 dark:border-[#E2C07C]/20 shadow-sm">
                 <div className="flex items-center gap-2 mb-2">
                   <span className="text-xl">🎯</span>
-                  <h3 className="text-lg font-bold text-rose-700 dark:text-[#E2C07C]">{promoData.title}</h3>
+                  <h3 className="text-lg font-bold text-rose-700 dark:text-[#E2C07C] font-serif">{promoData.title}</h3>
                 </div>
                 <p className="text-sm text-rose-600/80 dark:text-[#E2C07C]/80 font-medium mb-4">{promoData.subtitle}</p>
                 
@@ -339,7 +339,7 @@ export default function App() {
                 </div>
               </div>
 
-              <h3 className="text-lg font-bold text-[#4A3F35] dark:text-[#FDF8F5] mb-3 flex items-center gap-2">
+              <h3 className="text-lg font-bold text-[#4A3F35] dark:text-[#FDF8F5] mb-3 flex items-center gap-2 font-serif">
                 <CreditCard className="w-5 h-5 text-[#D9A0A5] dark:text-[#E2C07C]" />
                 高回饋信用卡
               </h3>
@@ -347,7 +347,7 @@ export default function App() {
                 {creditCardData.map((item, idx) => (
                   <div key={idx} className="bg-white dark:bg-[#362F2B] p-4 rounded-2xl shadow-sm border border-[#F0E5E1] dark:border-[#4A3F35] hover:shadow-md transition-all duration-200">
                     <div className="flex justify-between items-start mb-2">
-                      <h3 className="text-base font-bold text-[#4A3F35] dark:text-[#FDF8F5] leading-tight pr-2">{item.name}</h3>
+                      <h3 className="text-base font-bold text-[#4A3F35] dark:text-[#FDF8F5] leading-tight pr-2 font-serif">{item.name}</h3>
                       <span className="text-[10px] font-medium text-[#D9A0A5] dark:text-[#E2C07C] bg-[#FDF8F5] dark:bg-[#E2C07C]/20 px-2 py-1 rounded-md whitespace-nowrap shrink-0">
                         {item.reward}
                       </span>
@@ -367,7 +367,7 @@ export default function App() {
                 ))}
               </div>
 
-              <h3 className="text-lg font-bold text-[#4A3F35] dark:text-[#FDF8F5] mb-2 flex items-center gap-2">
+              <h3 className="text-lg font-bold text-[#4A3F35] dark:text-[#FDF8F5] mb-2 flex items-center gap-2 font-serif">
                 <Smartphone className="w-5 h-5 text-[#D9A0A5] dark:text-[#E2C07C]" />
                 電子支付 (PayPay) 補充攻略
               </h3>
@@ -377,7 +377,7 @@ export default function App() {
                 {ePayData.map((item, idx) => (
                   <div key={idx} className="bg-white dark:bg-[#362F2B] p-4 rounded-2xl shadow-sm border border-[#F0E5E1] dark:border-[#4A3F35] hover:shadow-md transition-all duration-200">
                     <div className="flex justify-between items-start mb-2">
-                      <h3 className="text-base font-bold text-[#4A3F35] dark:text-[#FDF8F5] leading-tight pr-2">{item.name}</h3>
+                      <h3 className="text-base font-bold text-[#4A3F35] dark:text-[#FDF8F5] leading-tight pr-2 font-serif">{item.name}</h3>
                       <span className="text-[10px] font-medium text-indigo-600 dark:text-[#E2C07C] bg-[#FDF8F5] dark:bg-[#E2C07C]/20 px-2 py-1 rounded-md whitespace-nowrap shrink-0">
                         {item.reward}
                       </span>
@@ -422,7 +422,7 @@ export default function App() {
                     <Marker key={idx} position={[item.lat, item.lng]} icon={getIcon(item.type)}>
                       <Popup>
                         <div className="p-1">
-                          <h3 className="font-bold text-sm mb-1">{item.name}</h3>
+                          <h3 className="font-bold text-sm mb-1 font-serif">{item.name}</h3>
                           <p className="text-xs text-[#6B5B4D]">{item.description}</p>
                           <span className={`inline-block mt-2 text-[10px] px-2 py-0.5 rounded-full ${
                             item.type === 'hotel' ? 'bg-yellow-100 text-yellow-800' :
