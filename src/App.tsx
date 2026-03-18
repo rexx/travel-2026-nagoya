@@ -45,21 +45,12 @@ const getIcon = (type: string) => {
 
 export default function App() {
   const [activeTab, setActiveTab] = useState<Tab>('itinerary');
-  const [isScrolled, setIsScrolled] = useState(false);
   const [isDarkMode, setIsDarkMode] = useState(() => {
     if (typeof window !== 'undefined') {
       return window.matchMedia('(prefers-color-scheme: dark)').matches;
     }
     return false;
   });
-
-  useEffect(() => {
-    const handleScroll = () => {
-      setIsScrolled(window.scrollY > 20);
-    };
-    window.addEventListener('scroll', handleScroll, { passive: true });
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
 
   useEffect(() => {
     if (isDarkMode) {
@@ -71,29 +62,27 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-[#FAF5F0] dark:bg-[#2A2421] text-[#4A3F35] dark:text-[#FDF8F5] font-sans pb-24 transition-colors duration-200">
-      {/* Header */}
-      <header className={`bg-white/95 backdrop-blur-md dark:bg-[#362F2B]/95 shadow-sm dark:shadow-[#2A2421]/50 sticky top-0 z-10 transition-all duration-300 ${isScrolled ? 'py-2' : 'py-0'}`}>
-        <div className={`max-w-3xl mx-auto px-4 flex items-center justify-between transition-all duration-300 ${isScrolled ? 'py-1' : 'py-5'}`}>
-          <div>
-            <h1 className={`font-bold text-[#4A3F35] dark:text-[#E2C07C] tracking-tight transition-all duration-300 ${isScrolled ? 'text-lg' : 'text-2xl'} font-serif`}>名古屋親子遊</h1>
-            <div className={`overflow-hidden transition-all duration-300 ${isScrolled ? 'h-0 opacity-0' : 'h-5 opacity-100 mt-1'}`}>
-              <p className="text-xs text-[#8C7A6B] dark:text-[#A89F91] font-medium">12天11夜 春季旅行指南</p>
+      {activeTab !== 'map' && (
+        <header className="bg-white/95 backdrop-blur-md dark:bg-[#362F2B]/95 shadow-sm dark:shadow-[#2A2421]/50 sticky top-0 z-10">
+          <div className="max-w-3xl mx-auto px-4 py-3 flex items-center justify-between">
+            <div>
+              <h1 className="font-bold text-lg text-[#4A3F35] dark:text-[#E2C07C] tracking-tight font-serif">名古屋親子遊</h1>
+            </div>
+            <div className="flex items-center gap-3">
+              <button
+                onClick={() => setIsDarkMode(!isDarkMode)}
+                className="rounded-xl text-[#8C7A6B] hover:bg-[#F0E5E1] dark:text-[#A89F91] dark:hover:bg-[#4A3F35] transition-all duration-300 p-1.5"
+                aria-label="Toggle Dark Mode"
+              >
+                {isDarkMode ? <Sun className="transition-all duration-300 w-4 h-4" /> : <Moon className="transition-all duration-300 w-4 h-4" />}
+              </button>
             </div>
           </div>
-          <div className="flex items-center gap-3">
-            <button 
-              onClick={() => setIsDarkMode(!isDarkMode)}
-              className={`rounded-xl text-[#8C7A6B] hover:bg-[#F0E5E1] dark:text-[#A89F91] dark:hover:bg-[#4A3F35] transition-all duration-300 ${isScrolled ? 'p-1.5' : 'p-2'}`}
-              aria-label="Toggle Dark Mode"
-            >
-              {isDarkMode ? <Sun className={`transition-all duration-300 ${isScrolled ? 'w-4 h-4' : 'w-5 h-5'}`} /> : <Moon className={`transition-all duration-300 ${isScrolled ? 'w-4 h-4' : 'w-5 h-5'}`} />}
-            </button>
-          </div>
-        </div>
-      </header>
+        </header>
+      )}
 
       {/* Main Content */}
-      <main className="max-w-3xl mx-auto px-4 py-6">
+      <main className={activeTab === 'map' ? 'h-[calc(100vh-88px)] px-0 pt-0' : 'max-w-3xl mx-auto px-4 py-6'}>
         <AnimatePresence mode="wait">
           {activeTab === 'itinerary' && (
             <motion.div
@@ -405,9 +394,9 @@ export default function App() {
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -10 }}
               transition={{ duration: 0.2 }}
-              className="h-[calc(100vh-160px)] flex flex-col"
+              className="h-full flex flex-col"
             >
-              <div className="flex-1 rounded-2xl overflow-hidden border border-[#E8DCC4] dark:border-[#4A3F35] shadow-sm relative z-0">
+              <div className="flex-1 overflow-hidden border-y border-[#E8DCC4] dark:border-[#4A3F35] shadow-sm relative z-0">
                 <MapContainer 
                   center={[35.1709, 136.8815]} 
                   zoom={11} 
