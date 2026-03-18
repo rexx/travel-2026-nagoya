@@ -1,8 +1,8 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { CalendarDays, UtensilsCrossed, Map, MapPin, Clock, Banknote, Info, CloudRain, Users, AlertCircle, CheckCircle2, BedDouble, Sun, Moon, CreditCard, Smartphone, MapPinned } from 'lucide-react';
 import { itineraryData, foodData, attractionData, creditCardData, promoData, ePayData, mapData } from './data';
 import { motion, AnimatePresence } from 'motion/react';
-import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
+import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
 
@@ -43,6 +43,20 @@ const getIcon = (type: string) => {
   });
 };
 
+function ResizeMapOnMount() {
+  const map = useMap();
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => {
+      map.invalidateSize();
+    }, 150);
+
+    return () => window.clearTimeout(timer);
+  }, [map]);
+
+  return null;
+}
+
 export default function App() {
   const [activeTab, setActiveTab] = useState<Tab>('itinerary');
   const [isDarkMode, setIsDarkMode] = useState(() => {
@@ -51,6 +65,8 @@ export default function App() {
     }
     return false;
   });
+  const navRef = useRef<HTMLElement | null>(null);
+  const [navHeight, setNavHeight] = useState(0);
 
   useEffect(() => {
     if (isDarkMode) {
@@ -60,8 +76,19 @@ export default function App() {
     }
   }, [isDarkMode]);
 
+  useEffect(() => {
+    const updateNavHeight = () => {
+      setNavHeight(navRef.current?.offsetHeight ?? 0);
+    };
+
+    updateNavHeight();
+    window.addEventListener('resize', updateNavHeight);
+
+    return () => window.removeEventListener('resize', updateNavHeight);
+  }, []);
+
   return (
-    <div className="min-h-screen bg-[#FAF5F0] dark:bg-[#2A2421] text-[#4A3F35] dark:text-[#FDF8F5] font-sans pb-24 transition-colors duration-200">
+    <div className={`min-h-screen w-full max-w-full overflow-x-hidden bg-[#FAF5F0] dark:bg-[#2A2421] text-[#4A3F35] dark:text-[#FDF8F5] font-sans transition-colors duration-200 ${activeTab === 'map' ? 'pb-0' : 'pb-24'}`}>
       {activeTab !== 'map' && (
         <header className="bg-white/95 backdrop-blur-md dark:bg-[#362F2B]/95 shadow-sm dark:shadow-[#2A2421]/50 sticky top-0 z-10">
           <div className="max-w-3xl mx-auto px-4 py-3 flex items-center justify-between">
@@ -82,7 +109,10 @@ export default function App() {
       )}
 
       {/* Main Content */}
-      <main className={activeTab === 'map' ? 'h-[calc(100vh-88px)] px-0 pt-0' : 'max-w-3xl mx-auto px-4 py-6'}>
+      <main
+        className={activeTab === 'map' ? 'px-0 pt-0' : 'max-w-3xl mx-auto px-4 py-6'}
+        style={activeTab === 'map' ? { height: `calc(100dvh - ${navHeight}px)` } : undefined}
+      >
         <AnimatePresence mode="wait">
           {activeTab === 'itinerary' && (
             <motion.div
@@ -403,6 +433,7 @@ export default function App() {
                   style={{ height: '100%', width: '100%' }}
                   className="z-0"
                 >
+                  <ResizeMapOnMount />
                   <TileLayer
                     attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
                     url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
@@ -433,7 +464,7 @@ export default function App() {
       </main>
 
       {/* Bottom Navigation */}
-      <nav className="fixed bottom-0 left-0 right-0 bg-white dark:bg-[#362F2B] border-t border-[#E8DCC4] dark:border-[#4A3F35] pb-safe z-50 transition-colors duration-200">
+      <nav ref={navRef} className="fixed bottom-0 left-0 right-0 bg-white dark:bg-[#362F2B] border-t border-[#E8DCC4] dark:border-[#4A3F35] pb-safe z-50 transition-colors duration-200">
         <div className="max-w-md mx-auto flex justify-around p-2">
           <button
             onClick={() => setActiveTab('itinerary')}
