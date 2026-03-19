@@ -1,11 +1,107 @@
 import { useState, useEffect, useRef } from 'react';
-import { CalendarDays, UtensilsCrossed, Map, MapPin, Clock, Banknote, Info, CloudRain, Users, AlertCircle, CheckCircle2, BedDouble, Sun, Moon, CreditCard, Smartphone, MapPinned, Settings2, X } from 'lucide-react';
+import { CalendarDays, UtensilsCrossed, Map, MapPin, Clock, Banknote, Info, CloudRain, Users, AlertCircle, CheckCircle2, BedDouble, Sun, Moon, CreditCard, Smartphone, MapPinned, Settings2, X, PlaneTakeoff, PlaneLanding, Trash2, Save } from 'lucide-react';
 import { itineraryData, foodData, attractionData, creditCardData, promoData, ePayData } from './data';
 import { motion, AnimatePresence } from 'motion/react';
 
 type Tab = 'itinerary' | 'food' | 'attractions' | 'cards' | 'map';
 const MAP_EMBED_URL_STORAGE_KEY = 'nagoya-map-embed-url';
+const FLIGHT_INFO_STORAGE_KEY = 'nagoya-flight-info';
 const GOOGLE_MAPS_EMBED_PLACEHOLDER = 'https://www.google.com/maps/d/embed?...';
+const FLIGHT_SEGMENT_LABELS = {
+  arrival: '去程',
+  departure: '回程',
+} as const;
+
+type FlightSegmentKey = keyof typeof FLIGHT_SEGMENT_LABELS;
+
+interface FlightSegment {
+  airline: string;
+  flightNumber: string;
+  departureAirport: string;
+  arrivalAirport: string;
+  departureTime: string;
+  arrivalTime: string;
+  terminal: string;
+  note: string;
+}
+
+interface FlightInfo {
+  arrival: FlightSegment;
+  departure: FlightSegment;
+}
+
+const createEmptyFlightSegment = (): FlightSegment => ({
+  airline: '',
+  flightNumber: '',
+  departureAirport: '',
+  arrivalAirport: '',
+  departureTime: '',
+  arrivalTime: '',
+  terminal: '',
+  note: '',
+});
+
+const createEmptyFlightInfo = (): FlightInfo => ({
+  arrival: createEmptyFlightSegment(),
+  departure: createEmptyFlightSegment(),
+});
+
+const normalizeFlightSegment = (segment?: Partial<FlightSegment>): FlightSegment => ({
+  airline: segment?.airline?.trim() ?? '',
+  flightNumber: segment?.flightNumber?.trim() ?? '',
+  departureAirport: segment?.departureAirport?.trim() ?? '',
+  arrivalAirport: segment?.arrivalAirport?.trim() ?? '',
+  departureTime: segment?.departureTime?.trim() ?? '',
+  arrivalTime: segment?.arrivalTime?.trim() ?? '',
+  terminal: segment?.terminal?.trim() ?? '',
+  note: segment?.note?.trim() ?? '',
+});
+
+const loadFlightInfo = (): FlightInfo => {
+  if (typeof window === 'undefined') {
+    return createEmptyFlightInfo();
+  }
+
+  const rawFlightInfo = window.localStorage.getItem(FLIGHT_INFO_STORAGE_KEY);
+
+  if (!rawFlightInfo) {
+    return createEmptyFlightInfo();
+  }
+
+  try {
+    const parsedFlightInfo = JSON.parse(rawFlightInfo) as Partial<FlightInfo>;
+
+    return {
+      arrival: normalizeFlightSegment(parsedFlightInfo.arrival),
+      departure: normalizeFlightSegment(parsedFlightInfo.departure),
+    };
+  } catch {
+    return createEmptyFlightInfo();
+  }
+};
+
+const hasFlightSegmentData = (segment: FlightSegment): boolean =>
+  Object.values(segment).some((value) => value.trim().length > 0);
+
+const formatFlightDateTime = (value: string): string => {
+  if (!value) {
+    return '';
+  }
+
+  const parsed = new Date(value);
+
+  if (Number.isNaN(parsed.getTime())) {
+    return value;
+  }
+
+  return parsed.toLocaleString('zh-TW', {
+    month: 'numeric',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false,
+  });
+};
 
 export default function App() {
   const [activeTab, setActiveTab] = useState<Tab>('itinerary');
@@ -32,6 +128,9 @@ export default function App() {
 
     return '';
   });
+  const [flightInfo, setFlightInfo] = useState<FlightInfo>(() => loadFlightInfo());
+  const [flightInfoDraft, setFlightInfoDraft] = useState<FlightInfo>(() => loadFlightInfo());
+  const [activeFlightEditor, setActiveFlightEditor] = useState<FlightSegmentKey | null>(null);
 
   useEffect(() => {
     if (isDarkMode) {
@@ -67,6 +166,78 @@ export default function App() {
     }
 
     window.localStorage.removeItem(MAP_EMBED_URL_STORAGE_KEY);
+  };
+
+  const updateFlightDraft = (
+    segmentKey: FlightSegmentKey,
+    field: keyof FlightSegment,
+    value: string,
+  ) => {
+    setFlightInfoDraft((current) => ({
+      ...current,
+      [segmentKey]: {
+        ...current[segmentKey],
+        [field]: value,
+      },
+    }));
+  };
+
+  const applyFlightInfo = () => {
+    if (typeof window === 'undefined') {
+      return;
+    }
+
+    const normalizedFlightInfo: FlightInfo = {
+      arrival: normalizeFlightSegment(flightInfoDraft.arrival),
+      departure: normalizeFlightSegment(flightInfoDraft.departure),
+    };
+
+    setFlightInfo(normalizedFlightInfo);
+    setFlightInfoDraft(normalizedFlightInfo);
+
+    if (hasFlightSegmentData(normalizedFlightInfo.arrival) || hasFlightSegmentData(normalizedFlightInfo.departure)) {
+      window.localStorage.setItem(FLIGHT_INFO_STORAGE_KEY, JSON.stringify(normalizedFlightInfo));
+      return;
+    }
+
+    window.localStorage.removeItem(FLIGHT_INFO_STORAGE_KEY);
+  };
+
+  const clearFlightInfo = () => {
+    const emptyFlightInfo = createEmptyFlightInfo();
+
+    setFlightInfo(emptyFlightInfo);
+    setFlightInfoDraft(emptyFlightInfo);
+
+    if (typeof window !== 'undefined') {
+      window.localStorage.removeItem(FLIGHT_INFO_STORAGE_KEY);
+    }
+  };
+
+  const clearFlightSegment = (segmentKey: FlightSegmentKey) => {
+    const emptySegment = createEmptyFlightSegment();
+
+    setFlightInfo((current) => {
+      const nextFlightInfo = {
+        ...current,
+        [segmentKey]: emptySegment,
+      };
+
+      if (typeof window !== 'undefined') {
+        if (hasFlightSegmentData(nextFlightInfo.arrival) || hasFlightSegmentData(nextFlightInfo.departure)) {
+          window.localStorage.setItem(FLIGHT_INFO_STORAGE_KEY, JSON.stringify(nextFlightInfo));
+        } else {
+          window.localStorage.removeItem(FLIGHT_INFO_STORAGE_KEY);
+        }
+      }
+
+      return nextFlightInfo;
+    });
+
+    setFlightInfoDraft((current) => ({
+      ...current,
+      [segmentKey]: emptySegment,
+    }));
   };
 
   return (
@@ -112,11 +283,29 @@ export default function App() {
                 </h2>
                 <p className="text-sm text-[#8C7A6B] dark:text-[#A89F91] mt-1">每日行程與備案規劃</p>
               </div>
-              
+
               <div className="space-y-4">
                 {itineraryData.map((item, idx) => (
                   <div key={idx} className="relative flex flex-col group is-active">
                     <div className="w-full bg-white dark:bg-[#362F2B] p-4 rounded-2xl shadow-sm border border-[#F0E5E1] dark:border-[#4A3F35] transition-colors duration-200">
+                      {(() => {
+                        const flightSegment =
+                          item.day === 'Day 1'
+                            ? flightInfo.arrival
+                            : item.day === 'Day 12'
+                              ? flightInfo.departure
+                              : null;
+                        const flightSegmentKey =
+                          item.day === 'Day 1'
+                            ? 'arrival'
+                            : item.day === 'Day 12'
+                              ? 'departure'
+                              : null;
+
+                        const hasFlightInfo = flightSegment ? hasFlightSegmentData(flightSegment) : false;
+
+                        return (
+                          <>
                       <div className="flex justify-between items-start mb-2">
                         <div>
                           <span className="text-xs font-bold text-[#D9A0A5] dark:text-[#E2C07C] bg-[#FDF8F5] dark:bg-[#E2C07C]/20 px-2 py-1 rounded-md mr-2">
@@ -127,13 +316,37 @@ export default function App() {
                           </span>
                         </div>
                         {item.status.includes('✅') ? (
-                          <span className="flex items-center text-[10px] font-medium text-[#7A907A] dark:text-[#9EBA9E] bg-[#FDF8F5] dark:bg-[#7A907A]/20 px-2 py-1 rounded-full">
-                            <CheckCircle2 className="w-3 h-3 mr-1" /> 已確認
-                          </span>
+                          <div className="flex items-center gap-2">
+                            {flightSegmentKey && (
+                              <button
+                                type="button"
+                                onClick={() => setActiveFlightEditor((current) => current === flightSegmentKey ? null : flightSegmentKey)}
+                                className="inline-flex items-center gap-1 rounded-full border border-[#E8DCC4] bg-[#FAF5F0] px-2.5 py-1 text-[10px] font-medium text-[#8C7A6B] transition hover:border-[#D9A0A5] hover:text-[#6B5B4D] dark:border-[#5C4D42] dark:bg-[#2A2421] dark:text-[#A89F91] dark:hover:border-[#9EBA9E] dark:hover:text-[#D1C4B5]"
+                              >
+                                {item.day === 'Day 1' ? <PlaneLanding className="h-3 w-3" /> : <PlaneTakeoff className="h-3 w-3" />}
+                                {activeFlightEditor === flightSegmentKey ? '收起航班' : '航班資訊'}
+                              </button>
+                            )}
+                            <span className="flex items-center text-[10px] font-medium text-[#7A907A] dark:text-[#9EBA9E] bg-[#FDF8F5] dark:bg-[#7A907A]/20 px-2 py-1 rounded-full">
+                              <CheckCircle2 className="w-3 h-3 mr-1" /> 已確認
+                            </span>
+                          </div>
                         ) : (
-                          <span className="flex items-center text-[10px] font-medium text-[#C5A059] dark:text-[#E0C082] bg-[#FDFBF5] dark:bg-[#C5A059]/20 px-2 py-1 rounded-full">
-                            <AlertCircle className="w-3 h-3 mr-1" /> 待處理
-                          </span>
+                          <div className="flex items-center gap-2">
+                            {flightSegmentKey && (
+                              <button
+                                type="button"
+                                onClick={() => setActiveFlightEditor((current) => current === flightSegmentKey ? null : flightSegmentKey)}
+                                className="inline-flex items-center gap-1 rounded-full border border-[#E8DCC4] bg-[#FAF5F0] px-2.5 py-1 text-[10px] font-medium text-[#8C7A6B] transition hover:border-[#D9A0A5] hover:text-[#6B5B4D] dark:border-[#5C4D42] dark:bg-[#2A2421] dark:text-[#A89F91] dark:hover:border-[#9EBA9E] dark:hover:text-[#D1C4B5]"
+                              >
+                                {item.day === 'Day 1' ? <PlaneLanding className="h-3 w-3" /> : <PlaneTakeoff className="h-3 w-3" />}
+                                {activeFlightEditor === flightSegmentKey ? '收起航班' : '航班資訊'}
+                              </button>
+                            )}
+                            <span className="flex items-center text-[10px] font-medium text-[#C5A059] dark:text-[#E0C082] bg-[#FDFBF5] dark:bg-[#C5A059]/20 px-2 py-1 rounded-full">
+                              <AlertCircle className="w-3 h-3 mr-1" /> 待處理
+                            </span>
+                          </div>
                         )}
                       </div>
                       
@@ -151,6 +364,135 @@ export default function App() {
                             <p className="leading-snug">住宿：{item.hotel}</p>
                           </div>
                         )}
+
+                        {flightSegment && hasFlightInfo && (
+                          <div className="flex items-start gap-2 text-sm text-[#6B5B4D] dark:text-[#D1C4B5] bg-[#FDF8F5] dark:bg-[#4A3F35]/50 p-3 rounded-lg border border-[#F0E5E1] dark:border-[#5C4D42]/50">
+                            {item.day === 'Day 1' ? (
+                              <PlaneLanding className="w-4 h-4 text-[#D9A0A5] dark:text-[#E2C07C] shrink-0 mt-0.5" />
+                            ) : (
+                              <PlaneTakeoff className="w-4 h-4 text-[#D9A0A5] dark:text-[#E2C07C] shrink-0 mt-0.5" />
+                            )}
+                            <div className="space-y-1">
+                              <p className="text-xs font-semibold text-[#4A3F35] dark:text-[#FDF8F5]">
+                                {item.day === 'Day 1' ? '抵達航班' : '返程航班'}
+                              </p>
+                              {(flightSegment.airline || flightSegment.flightNumber) && (
+                                <p className="leading-snug">
+                                  {[flightSegment.airline, flightSegment.flightNumber].filter(Boolean).join(' ')}
+                                </p>
+                              )}
+                              {(flightSegment.departureAirport || flightSegment.arrivalAirport) && (
+                                <p className="leading-snug">
+                                  {[flightSegment.departureAirport, flightSegment.arrivalAirport].filter(Boolean).join(' → ')}
+                                </p>
+                              )}
+                              {(flightSegment.departureTime || flightSegment.arrivalTime) && (
+                                <p className="text-xs leading-snug text-[#8C7A6B] dark:text-[#A89F91]">
+                                  {[formatFlightDateTime(flightSegment.departureTime), formatFlightDateTime(flightSegment.arrivalTime)].filter(Boolean).join(' → ')}
+                                </p>
+                              )}
+                              {flightSegment.terminal && (
+                                <p className="text-xs leading-snug text-[#8C7A6B] dark:text-[#A89F91]">
+                                  {flightSegment.terminal}
+                                </p>
+                              )}
+                              {flightSegment.note && (
+                                <p className="text-xs leading-snug text-[#8C7A6B] dark:text-[#A89F91]">
+                                  {flightSegment.note}
+                                </p>
+                              )}
+                            </div>
+                          </div>
+                        )}
+
+                        {flightSegmentKey && activeFlightEditor === flightSegmentKey && (
+                          <div className="rounded-xl border border-[#E8DCC4] bg-[#FAF5F0] p-3 dark:border-[#5C4D42] dark:bg-[#2A2421]">
+                            <div className="mb-3 flex items-start justify-between gap-3">
+                              <div>
+                                <p className="text-sm font-semibold text-[#4A3F35] dark:text-[#FDF8F5]">
+                                  {flightSegmentKey === 'arrival' ? '去程航班設定' : '回程航班設定'}
+                                </p>
+                              </div>
+                              <div className="flex gap-2">
+                                <button
+                                  type="button"
+                                  onClick={() => clearFlightSegment(flightSegmentKey)}
+                                  aria-label="清空航班資訊"
+                                  title="清空航班資訊"
+                                  className="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-[#E8DCC4] text-[#8C7A6B] transition hover:border-[#D9A0A5] hover:text-[#6B5B4D] dark:border-[#5C4D42] dark:text-[#A89F91] dark:hover:border-[#9EBA9E] dark:hover:text-[#D1C4B5]"
+                                >
+                                  <Trash2 className="h-4 w-4" />
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={applyFlightInfo}
+                                  aria-label="儲存航班資訊"
+                                  title="儲存航班資訊"
+                                  className="inline-flex h-9 w-9 items-center justify-center rounded-xl bg-[#D9A0A5] text-white transition hover:bg-[#C88992] dark:bg-[#7A907A] dark:hover:bg-[#6A816A]"
+                                >
+                                  <Save className="h-4 w-4" />
+                                </button>
+                              </div>
+                            </div>
+
+                            <div className="grid gap-3 sm:grid-cols-2">
+                              <input
+                                type="text"
+                                value={flightInfoDraft[flightSegmentKey].airline}
+                                onChange={(event) => updateFlightDraft(flightSegmentKey, 'airline', event.target.value)}
+                                placeholder="航空公司"
+                                className="w-full rounded-xl border border-[#E8DCC4] bg-white px-3 py-2 text-sm text-[#4A3F35] outline-none transition focus:border-[#D9A0A5] focus:ring-2 focus:ring-[#D9A0A5]/20 dark:border-[#5C4D42] dark:bg-[#362F2B] dark:text-[#FDF8F5] dark:placeholder:text-[#8C7A6B] dark:focus:border-[#9EBA9E] dark:focus:ring-[#9EBA9E]/20"
+                              />
+                              <input
+                                type="text"
+                                value={flightInfoDraft[flightSegmentKey].flightNumber}
+                                onChange={(event) => updateFlightDraft(flightSegmentKey, 'flightNumber', event.target.value)}
+                                placeholder="航班編號"
+                                className="w-full rounded-xl border border-[#E8DCC4] bg-white px-3 py-2 text-sm text-[#4A3F35] outline-none transition focus:border-[#D9A0A5] focus:ring-2 focus:ring-[#D9A0A5]/20 dark:border-[#5C4D42] dark:bg-[#362F2B] dark:text-[#FDF8F5] dark:placeholder:text-[#8C7A6B] dark:focus:border-[#9EBA9E] dark:focus:ring-[#9EBA9E]/20"
+                              />
+                              <input
+                                type="text"
+                                value={flightInfoDraft[flightSegmentKey].departureAirport}
+                                onChange={(event) => updateFlightDraft(flightSegmentKey, 'departureAirport', event.target.value)}
+                                placeholder="出發機場"
+                                className="w-full rounded-xl border border-[#E8DCC4] bg-white px-3 py-2 text-sm text-[#4A3F35] outline-none transition focus:border-[#D9A0A5] focus:ring-2 focus:ring-[#D9A0A5]/20 dark:border-[#5C4D42] dark:bg-[#362F2B] dark:text-[#FDF8F5] dark:placeholder:text-[#8C7A6B] dark:focus:border-[#9EBA9E] dark:focus:ring-[#9EBA9E]/20"
+                              />
+                              <input
+                                type="text"
+                                value={flightInfoDraft[flightSegmentKey].arrivalAirport}
+                                onChange={(event) => updateFlightDraft(flightSegmentKey, 'arrivalAirport', event.target.value)}
+                                placeholder="抵達機場"
+                                className="w-full rounded-xl border border-[#E8DCC4] bg-white px-3 py-2 text-sm text-[#4A3F35] outline-none transition focus:border-[#D9A0A5] focus:ring-2 focus:ring-[#D9A0A5]/20 dark:border-[#5C4D42] dark:bg-[#362F2B] dark:text-[#FDF8F5] dark:placeholder:text-[#8C7A6B] dark:focus:border-[#9EBA9E] dark:focus:ring-[#9EBA9E]/20"
+                              />
+                              <input
+                                type="datetime-local"
+                                value={flightInfoDraft[flightSegmentKey].departureTime}
+                                onChange={(event) => updateFlightDraft(flightSegmentKey, 'departureTime', event.target.value)}
+                                className="w-full rounded-xl border border-[#E8DCC4] bg-white px-3 py-2 text-sm text-[#4A3F35] outline-none transition focus:border-[#D9A0A5] focus:ring-2 focus:ring-[#D9A0A5]/20 dark:border-[#5C4D42] dark:bg-[#362F2B] dark:text-[#FDF8F5] dark:focus:border-[#9EBA9E] dark:focus:ring-[#9EBA9E]/20"
+                              />
+                              <input
+                                type="datetime-local"
+                                value={flightInfoDraft[flightSegmentKey].arrivalTime}
+                                onChange={(event) => updateFlightDraft(flightSegmentKey, 'arrivalTime', event.target.value)}
+                                className="w-full rounded-xl border border-[#E8DCC4] bg-white px-3 py-2 text-sm text-[#4A3F35] outline-none transition focus:border-[#D9A0A5] focus:ring-2 focus:ring-[#D9A0A5]/20 dark:border-[#5C4D42] dark:bg-[#362F2B] dark:text-[#FDF8F5] dark:focus:border-[#9EBA9E] dark:focus:ring-[#9EBA9E]/20"
+                              />
+                              <input
+                                type="text"
+                                value={flightInfoDraft[flightSegmentKey].terminal}
+                                onChange={(event) => updateFlightDraft(flightSegmentKey, 'terminal', event.target.value)}
+                                placeholder="航廈 / 櫃位備註"
+                                className="w-full rounded-xl border border-[#E8DCC4] bg-white px-3 py-2 text-sm text-[#4A3F35] outline-none transition focus:border-[#D9A0A5] focus:ring-2 focus:ring-[#D9A0A5]/20 dark:border-[#5C4D42] dark:bg-[#362F2B] dark:text-[#FDF8F5] dark:placeholder:text-[#8C7A6B] dark:focus:border-[#9EBA9E] dark:focus:ring-[#9EBA9E]/20 sm:col-span-2"
+                              />
+                              <textarea
+                                value={flightInfoDraft[flightSegmentKey].note}
+                                onChange={(event) => updateFlightDraft(flightSegmentKey, 'note', event.target.value)}
+                                placeholder="備註"
+                                rows={2}
+                                className="w-full rounded-xl border border-[#E8DCC4] bg-white px-3 py-2 text-sm text-[#4A3F35] outline-none transition focus:border-[#D9A0A5] focus:ring-2 focus:ring-[#D9A0A5]/20 dark:border-[#5C4D42] dark:bg-[#362F2B] dark:text-[#FDF8F5] dark:placeholder:text-[#8C7A6B] dark:focus:border-[#9EBA9E] dark:focus:ring-[#9EBA9E]/20 sm:col-span-2"
+                              />
+                            </div>
+                          </div>
+                        )}
                         
                         {item.rainBackup !== '—' && (
                           <div className="flex items-start gap-2 text-sm text-[#8C7A6B] dark:text-[#A89F91] bg-[#FAF5F0] dark:bg-[#4A3F35]/50 p-2 rounded-lg mt-2 border border-[#F0E5E1] dark:border-[#5C4D42]/50">
@@ -159,6 +501,9 @@ export default function App() {
                           </div>
                         )}
                       </div>
+                          </>
+                        );
+                      })()}
                     </div>
                   </div>
                 ))}
