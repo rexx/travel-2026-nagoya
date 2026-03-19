@@ -1,4 +1,4 @@
-import { AttractionItem, FoodItem, ItineraryItem, CreditCardItem, PromoItem, EPayItem, MapItem } from './types';
+import { AttractionItem, FoodItem, ItineraryItem, CreditCardItem, PromoItem, EPayItem } from './types';
 
 export const itineraryData: ItineraryItem[] = [
   { day: 'Day 1', date: '4/15', weekday: '三', hotel: '機場飯店', theme: '✈️ 抵達', schedule: '晚抵中部國際機場 → 機場飯店check-in → 超商或機場簡單晚餐', rainBackup: '—', status: '✅ 已訂' },
@@ -83,21 +83,4 @@ export const ePayData: EPayItem[] = [
   { name: '全盈Pay', reward: '5.5% / 最高 13.5%', validity: '~2026/4/30', notes: '人人都有 5.5% 回饋，搭配彰化銀行帳戶最高 +8%' },
   { name: '全支付', reward: '3.5% / 最高 8.5%', validity: '~2026/6/30', notes: '筆筆 3.5% 無門檻，搭配國泰帳戶週回饋 +5%' },
   { name: '玉山 Wallet + 熊本熊卡', reward: '最高 5%', validity: '~2026/6/30', notes: 'PayPay 通路最高 5%' }
-];
-
-export const mapData: MapItem[] = [
-  { name: '名古屋站 (住宿/交通)', lat: 35.1709, lng: 136.8815, type: 'hotel', description: 'Day 2-5 住宿點，交通樞紐' },
-  { name: '榮商圈 (住宿/購物)', lat: 35.1698, lng: 136.9082, type: 'hotel', description: 'Day 6-10 住宿點，購物天堂' },
-  { name: '中部國際機場', lat: 34.8584, lng: 136.8126, type: 'transport', description: '進出門戶' },
-  { name: '中部國際機場飯店', lat: 34.8592, lng: 136.8145, type: 'hotel', description: 'Day 1 & 11 住宿點，機場直結' },
-  { name: '名古屋城', lat: 35.1848, lng: 136.8996, type: 'attraction', description: '名古屋地標，本丸御殿必看' },
-  { name: '樂高樂園 (LEGOLAND)', lat: 35.0505, lng: 136.8436, type: 'attraction', description: '親子必去主題樂園' },
-  { name: '吉卜力公園', lat: 35.1741, lng: 137.0583, type: 'attraction', description: '愛・地球博紀念公園內' },
-  { name: '熱田神宮', lat: 35.1260, lng: 136.9088, type: 'attraction', description: '日本三大神宮之一' },
-  { name: '大須商店街', lat: 35.1593, lng: 136.9015, type: 'attraction', description: '好逛好買的商店街，雨天備案' },
-  { name: '東山動植物園', lat: 35.1593, lng: 136.9754, type: 'attraction', description: '超人氣動物園，無尾熊必看' },
-  { name: '長島度假村 (麵包超人)', lat: 35.0305, lng: 136.7352, type: 'attraction', description: '麵包超人博物館與Outlet' },
-  { name: '名古屋港水族館', lat: 35.0907, lng: 136.8804, type: 'attraction', description: '雨天備案首選，有虎鯨表演' },
-  { name: '矢場豬排 (矢場町本店)', lat: 35.1614, lng: 136.9059, type: 'food', description: '名古屋必吃味噌豬排' },
-  { name: '戶田川綠地公園', lat: 35.1167, lng: 136.8167, type: 'attraction', description: '親子戶外放電好去處' }
 ];

@@ -1,61 +1,11 @@
 import { useState, useEffect, useRef } from 'react';
-import { CalendarDays, UtensilsCrossed, Map, MapPin, Clock, Banknote, Info, CloudRain, Users, AlertCircle, CheckCircle2, BedDouble, Sun, Moon, CreditCard, Smartphone, MapPinned } from 'lucide-react';
-import { itineraryData, foodData, attractionData, creditCardData, promoData, ePayData, mapData } from './data';
+import { CalendarDays, UtensilsCrossed, Map, MapPin, Clock, Banknote, Info, CloudRain, Users, AlertCircle, CheckCircle2, BedDouble, Sun, Moon, CreditCard, Smartphone, MapPinned, Settings2, X } from 'lucide-react';
+import { itineraryData, foodData, attractionData, creditCardData, promoData, ePayData } from './data';
 import { motion, AnimatePresence } from 'motion/react';
-import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
-import 'leaflet/dist/leaflet.css';
-import L from 'leaflet';
-
-// Fix Leaflet default icon issue
-delete (L.Icon.Default.prototype as any)._getIconUrl;
-L.Icon.Default.mergeOptions({
-  iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png',
-  iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png',
-  shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
-});
 
 type Tab = 'itinerary' | 'food' | 'attractions' | 'cards' | 'map';
-
-const getIcon = (type: string) => {
-  let bgColor = 'bg-[#B89578]';
-
-  switch (type) {
-    case 'hotel':
-      bgColor = 'bg-[#D4AA5A]';
-      break;
-    case 'attraction':
-      bgColor = 'bg-[#6F98D8]';
-      break;
-    case 'food':
-      bgColor = 'bg-[#D98563]';
-      break;
-    case 'transport':
-      bgColor = 'bg-[#67B88C]';
-      break;
-  }
-
-  return L.divIcon({
-    className: 'custom-leaflet-icon',
-    html: `<div class="w-5 h-5 rounded-full shadow-md border-2 border-white ${bgColor}"></div>`,
-    iconSize: [20, 20],
-    iconAnchor: [10, 10],
-    popupAnchor: [0, -10]
-  });
-};
-
-function ResizeMapOnMount() {
-  const map = useMap();
-
-  useEffect(() => {
-    const timer = window.setTimeout(() => {
-      map.invalidateSize();
-    }, 150);
-
-    return () => window.clearTimeout(timer);
-  }, [map]);
-
-  return null;
-}
+const MAP_EMBED_URL_STORAGE_KEY = 'nagoya-map-embed-url';
+const GOOGLE_MAPS_EMBED_PLACEHOLDER = 'https://www.google.com/maps/d/embed?...';
 
 export default function App() {
   const [activeTab, setActiveTab] = useState<Tab>('itinerary');
@@ -67,6 +17,21 @@ export default function App() {
   });
   const navRef = useRef<HTMLElement | null>(null);
   const [navHeight, setNavHeight] = useState(0);
+  const [isMapSettingsOpen, setIsMapSettingsOpen] = useState(false);
+  const [mapEmbedUrl, setMapEmbedUrl] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return window.localStorage.getItem(MAP_EMBED_URL_STORAGE_KEY) ?? '';
+    }
+
+    return '';
+  });
+  const [mapEmbedDraft, setMapEmbedDraft] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return window.localStorage.getItem(MAP_EMBED_URL_STORAGE_KEY) ?? '';
+    }
+
+    return '';
+  });
 
   useEffect(() => {
     if (isDarkMode) {
@@ -86,6 +51,23 @@ export default function App() {
 
     return () => window.removeEventListener('resize', updateNavHeight);
   }, []);
+
+  const applyMapEmbedUrl = () => {
+    if (typeof window === 'undefined') {
+      return;
+    }
+
+    const trimmedUrl = mapEmbedDraft.trim();
+
+    setMapEmbedUrl(trimmedUrl);
+
+    if (trimmedUrl) {
+      window.localStorage.setItem(MAP_EMBED_URL_STORAGE_KEY, trimmedUrl);
+      return;
+    }
+
+    window.localStorage.removeItem(MAP_EMBED_URL_STORAGE_KEY);
+  };
 
   return (
     <div className={`min-h-screen w-full max-w-full overflow-x-hidden bg-[#FAF5F0] dark:bg-[#2A2421] text-[#4A3F35] dark:text-[#FDF8F5] font-sans transition-colors duration-200 ${activeTab === 'map' ? 'pb-0' : 'pb-24'}`}>
@@ -424,39 +406,67 @@ export default function App() {
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -10 }}
               transition={{ duration: 0.2 }}
-              className="h-full flex flex-col"
+              className="h-full flex flex-col bg-[#FAF5F0] dark:bg-[#2A2421]"
             >
-              <div className="flex-1 overflow-hidden border-y border-[#E8DCC4] dark:border-[#4A3F35] shadow-sm relative z-0">
-                <MapContainer 
-                  center={[35.1709, 136.8815]} 
-                  zoom={11} 
-                  style={{ height: '100%', width: '100%' }}
-                  className="z-0"
-                >
-                  <ResizeMapOnMount />
-                  <TileLayer
-                    attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-                    url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-                  />
-                  {mapData.map((item, idx) => (
-                    <Marker key={idx} position={[item.lat, item.lng]} icon={getIcon(item.type)}>
-                      <Popup>
-                        <div className="p-1">
-                          <h3 className="font-bold text-sm mb-1 font-serif">{item.name}</h3>
-                          <p className="text-xs text-[#6B5B4D]">{item.description}</p>
-                          <span className={`inline-block mt-2 text-[10px] px-2 py-0.5 rounded-full ${
-                            item.type === 'hotel' ? 'bg-yellow-100 text-yellow-800' :
-                            item.type === 'attraction' ? 'bg-blue-100 text-blue-700' :
-                            item.type === 'food' ? 'bg-orange-100 text-orange-700' :
-                            'bg-emerald-100 text-emerald-700'
-                          }`}>
-                            {item.type === 'hotel' ? '住宿' : item.type === 'attraction' ? '景點' : item.type === 'food' ? '美食' : '交通'}
-                          </span>
+              <div className="relative flex-1 overflow-hidden">
+                <div className="pointer-events-none absolute inset-x-0 top-0 z-20 flex justify-end px-4 pt-16">
+                  <div className="pointer-events-auto flex flex-col items-end gap-3">
+                    <button
+                      type="button"
+                      onClick={() => setIsMapSettingsOpen((current) => !current)}
+                      className="inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-white/60 bg-white/90 text-[#6B5B4D] shadow-lg backdrop-blur-sm transition hover:border-[#D9A0A5] hover:text-[#D9A0A5] dark:border-[#5C4D42]/80 dark:bg-[#2A2421]/90 dark:text-[#D1C4B5] dark:hover:border-[#9EBA9E] dark:hover:text-[#9EBA9E]"
+                      aria-label={isMapSettingsOpen ? 'Hide map settings' : 'Show map settings'}
+                      aria-expanded={isMapSettingsOpen}
+                    >
+                      {isMapSettingsOpen ? <X className="h-5 w-5" /> : <Settings2 className="h-5 w-5" />}
+                    </button>
+                    {isMapSettingsOpen && (
+                      <div className="w-[min(28rem,calc(100vw-2rem))] rounded-3xl border border-white/70 bg-white/95 p-4 shadow-2xl backdrop-blur-md dark:border-[#5C4D42]/80 dark:bg-[#362F2B]/95">
+                        <div className="flex flex-col gap-3">
+                          <p className="text-sm text-[#8C7A6B] dark:text-[#A89F91]">
+                            貼上 Google Maps embed iframe 的 `src` 網址，按確認後才會儲存並載入。
+                          </p>
+                          <div className="flex flex-col gap-3 sm:flex-row">
+                            <input
+                              type="url"
+                              value={mapEmbedDraft}
+                              onChange={(event) => setMapEmbedDraft(event.target.value)}
+                              placeholder={GOOGLE_MAPS_EMBED_PLACEHOLDER}
+                              spellCheck={false}
+                              className="w-full rounded-2xl border border-[#E8DCC4] bg-[#FAF5F0] px-4 py-3 text-sm text-[#4A3F35] outline-none transition focus:border-[#D9A0A5] focus:ring-2 focus:ring-[#D9A0A5]/20 dark:border-[#5C4D42] dark:bg-[#2A2421] dark:text-[#FDF8F5] dark:placeholder:text-[#8C7A6B] dark:focus:border-[#9EBA9E] dark:focus:ring-[#9EBA9E]/20"
+                              aria-label="Google Maps embed URL"
+                            />
+                            <button
+                              type="button"
+                              onClick={applyMapEmbedUrl}
+                              className="inline-flex h-12 items-center justify-center rounded-2xl bg-[#D9A0A5] px-5 text-sm font-semibold text-white transition hover:bg-[#C88992] dark:bg-[#7A907A] dark:hover:bg-[#6A816A]"
+                            >
+                              確認
+                            </button>
+                          </div>
                         </div>
-                      </Popup>
-                    </Marker>
-                  ))}
-                </MapContainer>
+                      </div>
+                    )}
+                  </div>
+                </div>
+                {mapEmbedUrl.trim() ? (
+                  <iframe
+                    src={mapEmbedUrl.trim()}
+                    title="Nagoya travel map"
+                    loading="lazy"
+                    className="h-full w-full border-0"
+                    referrerPolicy="no-referrer-when-downgrade"
+                  />
+                ) : (
+                  <div className="flex h-full items-center justify-center px-6 text-center">
+                    <div className="max-w-md rounded-3xl border border-dashed border-[#D8C8B8] bg-white/80 px-6 py-8 shadow-sm dark:border-[#5C4D42] dark:bg-[#362F2B]/80">
+                      <p className="text-base font-semibold text-[#4A3F35] dark:text-[#FDF8F5]">尚未設定地圖網址</p>
+                      <p className="mt-2 text-sm leading-6 text-[#8C7A6B] dark:text-[#A89F91]">
+                        請貼上 Google Maps 自訂地圖 iframe 的 `src`，例如 `https://www.google.com/maps/d/embed?...`
+                      </p>
+                    </div>
+                  </div>
+                )}
               </div>
             </motion.div>
           )}

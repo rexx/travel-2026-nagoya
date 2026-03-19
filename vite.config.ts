@@ -23,10 +23,6 @@ export default defineConfig(({mode}) => {
               return undefined;
             }
 
-            if (id.includes('leaflet') || id.includes('react-leaflet')) {
-              return 'map-vendor';
-            }
-
             if (id.includes('motion') || id.includes('lucide-react')) {
               return 'ui-vendor';
             }

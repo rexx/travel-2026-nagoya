@@ -57,11 +57,3 @@ export interface EPayItem {
   validity: string;
   notes: string;
 }
-
-export interface MapItem {
-  name: string;
-  lat: number;
-  lng: number;
-  type: 'hotel' | 'attraction' | 'food' | 'transport';
-  description: string;
-}
