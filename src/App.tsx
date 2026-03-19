@@ -506,7 +506,7 @@ export default function App() {
           <button
             onClick={() => setActiveTab('map')}
             className={`flex flex-col items-center justify-center w-14 py-2 rounded-xl transition-colors ${
-              activeTab === 'map' ? 'text-[#D9A0A5] dark:text-[#9EBA9E] bg-[#FDF8F5] dark:bg-[#7A907A]/20' : 'text-[#A89F91] dark:text-[#8C7A6B] hover:text-[#6B5B4D] dark:hover:text-[#D1C4B5]'
+              activeTab === 'map' ? 'text-[#D9A0A5] dark:text-[#E2C07C] bg-[#FDF8F5] dark:bg-[#E2C07C]/20' : 'text-[#A89F91] dark:text-[#8C7A6B] hover:text-[#6B5B4D] dark:hover:text-[#D1C4B5]'
             }`}
           >
             <MapPinned className="w-5 h-5 mb-1" />
