@@ -103,6 +103,9 @@ const formatFlightDateTime = (value: string): string => {
   });
 };
 
+const formatCardPageAmounts = (value: string): string =>
+  value.replace(/(?<![\d/.,])(\d{4,})(?![\d/.%])/g, (match) => Number(match).toLocaleString('en-US'));
+
 export default function App() {
   const [activeTab, setActiveTab] = useState<Tab>('itinerary');
   const [isDarkMode, setIsDarkMode] = useState(() => {
@@ -653,38 +656,6 @@ export default function App() {
                 <p className="text-sm text-[#8C7A6B] dark:text-[#A89F91] mt-1">海外消費高回饋信用卡與電子支付推薦</p>
               </div>
 
-              {/* JCB Promo Section */}
-              <div className="mb-8 bg-gradient-to-br from-rose-50 to-orange-50 dark:from-[#E2C07C]/10 dark:to-[#C5A059]/10 p-5 rounded-2xl border border-rose-100 dark:border-[#E2C07C]/20 shadow-sm">
-                <div className="flex items-center gap-2 mb-2">
-                  <span className="text-xl">🎯</span>
-                  <h3 className="text-lg font-bold text-rose-700 dark:text-[#E2C07C] font-serif">{promoData.title}</h3>
-                </div>
-                <p className="text-sm text-rose-600/80 dark:text-[#E2C07C]/80 font-medium mb-4">{promoData.subtitle}</p>
-                
-                <div className="space-y-3 text-sm text-[#4A3F35] dark:text-[#D1C4B5]">
-                  <div className="flex items-start gap-2">
-                    <CalendarDays className="w-4 h-4 text-rose-400 dark:text-[#D9A0A5] shrink-0 mt-0.5" />
-                    <p><span className="font-semibold text-[#4A3F35] dark:text-[#E8DCC4]">活動期間：</span>{promoData.period}</p>
-                  </div>
-                  <div className="flex items-start gap-2">
-                    <Banknote className="w-4 h-4 text-rose-400 dark:text-[#D9A0A5] shrink-0 mt-0.5" />
-                    <p><span className="font-semibold text-[#4A3F35] dark:text-[#E8DCC4]">條件：</span>{promoData.condition}</p>
-                  </div>
-                  <div className="flex items-start gap-2">
-                    <CheckCircle2 className="w-4 h-4 text-rose-400 dark:text-[#D9A0A5] shrink-0 mt-0.5" />
-                    <p><span className="font-semibold text-[#4A3F35] dark:text-[#E8DCC4]">回饋：</span>{promoData.reward}</p>
-                  </div>
-                  <div className="flex items-start gap-2">
-                    <AlertCircle className="w-4 h-4 text-rose-400 dark:text-[#D9A0A5] shrink-0 mt-0.5" />
-                    <p><span className="font-semibold text-rose-600 dark:text-[#E2C07C]">必要步驟：</span>{promoData.requirement}</p>
-                  </div>
-                  <div className="flex items-start gap-2">
-                    <CreditCard className="w-4 h-4 text-rose-400 dark:text-[#D9A0A5] shrink-0 mt-0.5" />
-                    <p><span className="font-semibold text-[#4A3F35] dark:text-[#E8DCC4]">適用卡片：</span>{promoData.applicable}</p>
-                  </div>
-                </div>
-              </div>
-
               <h3 className="text-lg font-bold text-[#4A3F35] dark:text-[#FDF8F5] mb-3 flex items-center gap-2 font-serif">
                 <CreditCard className="w-5 h-5 text-[#D9A0A5] dark:text-[#E2C07C]" />
                 高回饋信用卡
@@ -702,11 +673,19 @@ export default function App() {
                     <div className="mt-3 pt-3 border-t border-[#F0E5E1] dark:border-[#4A3F35] space-y-2">
                       <p className="text-xs text-[#8C7A6B] dark:text-[#A89F91] flex items-start gap-1.5">
                         <CalendarDays className="w-3.5 h-3.5 text-[#A89F91] dark:text-[#8C7A6B] shrink-0" />
-                        <span className="leading-snug">活動效期：{item.validity}</span>
+                        <span className="leading-snug">加碼上限：{formatCardPageAmounts(item.bonusLimit)}</span>
+                      </p>
+                      <p className="text-xs text-[#8C7A6B] dark:text-[#A89F91] flex items-start gap-1.5">
+                        <CheckCircle2 className="w-3.5 h-3.5 text-[#A89F91] dark:text-[#8C7A6B] shrink-0" />
+                        <span className="leading-snug">活動條件：{formatCardPageAmounts(item.condition)}</span>
+                      </p>
+                      <p className="text-xs text-[#8C7A6B] dark:text-[#A89F91] flex items-start gap-1.5">
+                        <Banknote className="w-3.5 h-3.5 text-[#A89F91] dark:text-[#8C7A6B] shrink-0" />
+                        <span className="leading-snug">刷滿上限：{formatCardPageAmounts(item.spendCap)}</span>
                       </p>
                       <p className="text-xs text-[#8C7A6B] dark:text-[#A89F91] flex items-start gap-1.5">
                         <Info className="w-3.5 h-3.5 text-[#A89F91] dark:text-[#8C7A6B] shrink-0" />
-                        <span className="leading-snug">{item.notes}</span>
+                        <span className="leading-snug">備註：{formatCardPageAmounts(item.notes)}</span>
                       </p>
                     </div>
                   </div>
@@ -741,6 +720,37 @@ export default function App() {
                     </div>
                   </div>
                 ))}
+              </div>
+              {/* JCB Promo Section */}
+              <div className="mt-8 bg-gradient-to-br from-rose-50 to-orange-50 dark:from-[#E2C07C]/10 dark:to-[#C5A059]/10 p-5 rounded-2xl border border-rose-100 dark:border-[#E2C07C]/20 shadow-sm">
+                <div className="flex items-center gap-2 mb-2">
+                  <span className="text-xl">🎯</span>
+                  <h3 className="text-lg font-bold text-rose-700 dark:text-[#E2C07C] font-serif">{promoData.title}</h3>
+                </div>
+                <p className="text-sm text-rose-600/80 dark:text-[#E2C07C]/80 font-medium mb-4">{promoData.subtitle}</p>
+
+                <div className="space-y-3 text-sm text-[#4A3F35] dark:text-[#D1C4B5]">
+                  <div className="flex items-start gap-2">
+                    <CalendarDays className="w-4 h-4 text-rose-400 dark:text-[#D9A0A5] shrink-0 mt-0.5" />
+                    <p><span className="font-semibold text-[#4A3F35] dark:text-[#E8DCC4]">活動期間：</span>{formatCardPageAmounts(promoData.period)}</p>
+                  </div>
+                  <div className="flex items-start gap-2">
+                    <Banknote className="w-4 h-4 text-rose-400 dark:text-[#D9A0A5] shrink-0 mt-0.5" />
+                    <p><span className="font-semibold text-[#4A3F35] dark:text-[#E8DCC4]">條件：</span>{formatCardPageAmounts(promoData.condition)}</p>
+                  </div>
+                  <div className="flex items-start gap-2">
+                    <CheckCircle2 className="w-4 h-4 text-rose-400 dark:text-[#D9A0A5] shrink-0 mt-0.5" />
+                    <p><span className="font-semibold text-[#4A3F35] dark:text-[#E8DCC4]">回饋：</span>{formatCardPageAmounts(promoData.reward)}</p>
+                  </div>
+                  <div className="flex items-start gap-2">
+                    <AlertCircle className="w-4 h-4 text-rose-400 dark:text-[#D9A0A5] shrink-0 mt-0.5" />
+                    <p><span className="font-semibold text-rose-600 dark:text-[#E2C07C]">必要步驟：</span>{formatCardPageAmounts(promoData.requirement)}</p>
+                  </div>
+                  <div className="flex items-start gap-2">
+                    <CreditCard className="w-4 h-4 text-rose-400 dark:text-[#D9A0A5] shrink-0 mt-0.5" />
+                    <p><span className="font-semibold text-[#4A3F35] dark:text-[#E8DCC4]">適用卡片：</span>{formatCardPageAmounts(promoData.applicable)}</p>
+                  </div>
+                </div>
               </div>
             </motion.div>
           )}

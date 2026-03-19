@@ -61,12 +61,13 @@ export const attractionData: AttractionItem[] = [
 ];
 
 export const creditCardData: CreditCardItem[] = [
-  { name: '中信 uniopen 卡', reward: '11%（海外實體）', validity: '~2026/6/30', notes: '免登錄、免搶券，每月上限 500元（刷 6,250 元封頂）' },
-  { name: '聯邦吉鶴卡', reward: '11%（含新戶）', validity: '~2026/6/30', notes: '需用 Apple Pay（iPhone 限定），指定11間通路' },
-  { name: '玉山熊本熊卡', reward: '8.5%', validity: '~2026/6/30', notes: '需登錄（不限量），含 Suica/PASMO 儲值 6% 加碼' },
-  { name: '永豐現金回饋 JCB 卡', reward: '最高10%', validity: '~2026/6/30', notes: '每季刷滿 2 萬元再加碼 5%（需登錄，限 5,000 名）' },
-  { name: '台北富邦 J 卡', reward: '最高6%', validity: '~2026/6/30', notes: '日韓實體 3% 無上限＋加碼 3%（需登錄 6 萬名/季）' },
-  { name: '星展 eco 永續卡', reward: '5%', validity: '~2026/6/30', notes: '日韓泰美歐皆適用，每期回饋上限 600 元' }
+  { name: '永豐 JCB', reward: '18.36%', bonusLimit: '2% 無上限 / 5% 上限 1000 / 刷 20300', condition: 'JCB 活動 10% 須刷滿 10 萬日圓', spendCap: '¥100000', notes: '飯店到店付款 86,192' },
+  { name: '富邦 JCB', reward: '16%', bonusLimit: '3% 無上限 / 3% 上限 1000 / 刷 20300', condition: 'JCB 活動 10% 須刷滿 10 萬日圓', spendCap: '¥100000', notes: '餐食、購物' },
+  { name: '中信 uniopen*2', reward: '11.0%', bonusLimit: '3% 無上限 / 8% 上限 500 / 刷 6250', condition: '實體卡消費', spendCap: '¥30800', notes: '日本 7-ELEVEN 單筆滿 1,500 日圓（含稅）享 225 日圓現金回饋' },
+  { name: '永豐幣倍', reward: '6.0%', bonusLimit: '2% 無上限 / 4% 上限 800 / 刷 20000', condition: '實體卡消費', spendCap: '¥99000', notes: '—' },
+  { name: '星展 eco', reward: '5.0%', bonusLimit: '1% 無上限 / 4% 上限 600 / 刷 15000', condition: '實體卡消費', spendCap: '¥74000', notes: '—' },
+  { name: '永豐大戶*2', reward: '4.5%', bonusLimit: '2% 無上限 / 2.5% 上限 400 / 刷 16000', condition: '線上 / 實體皆可', spendCap: '¥79000', notes: 'Booking 線上付款 10,580 / 69,881' },
+  { name: '台新 Richart', reward: '3.3%', bonusLimit: '無上限', condition: '線上 / 實體皆可', spendCap: '—', notes: '—' }
 ];
 
 export const promoData: PromoItem = {

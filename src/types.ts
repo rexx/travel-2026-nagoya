@@ -37,7 +37,9 @@ export interface AttractionItem {
 export interface CreditCardItem {
   name: string;
   reward: string;
-  validity: string;
+  bonusLimit: string;
+  condition: string;
+  spendCap: string;
   notes: string;
 }
 
