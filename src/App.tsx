@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { CalendarDays, UtensilsCrossed, Map, MapPin, Clock, Banknote, Info, CloudRain, AlertCircle, CheckCircle2, BedDouble, Sun, Moon, CreditCard, Smartphone, MapPinned, Settings2, X, PlaneTakeoff, PlaneLanding, Trash2, Save, LayoutGrid, List, ChevronDown, ChevronUp } from 'lucide-react';
+import { CalendarDays, UtensilsCrossed, Map, MapPin, Clock, Banknote, Info, Pencil, CloudRain, AlertCircle, CheckCircle2, BedDouble, Sun, Moon, CreditCard, Smartphone, MapPinned, Settings2, X, PlaneTakeoff, PlaneLanding, Trash2, Save, LayoutGrid, List, ChevronDown, ChevronUp } from 'lucide-react';
 import { itineraryData, foodData, attractionData, creditCardData, promoData, ePayData } from './data';
 import { motion, AnimatePresence } from 'motion/react';
 import { AttractionItem, FoodItem, ItineraryItem } from './types';
@@ -10,6 +10,7 @@ type AttractionConditionKey = 'rain' | 'weekend';
 
 const MAP_EMBED_URL_STORAGE_KEY = 'nagoya-map-embed-url';
 const FLIGHT_INFO_STORAGE_KEY = 'nagoya-flight-info';
+const ITINERARY_NOTES_STORAGE_KEY = 'nagoya-itinerary-notes';
 const GOOGLE_MAPS_EMBED_PLACEHOLDER = 'https://www.google.com/maps/d/embed?...';
 const ALL_FILTER_LABEL = '全部';
 const ATTRACTION_CONDITION_LABELS: Record<AttractionConditionKey, string> = {
@@ -59,6 +60,7 @@ interface MapTarget {
   label: string;
   mapQuery: string;
 }
+type ItineraryNotes = Record<string, string>;
 
 const createEmptyFlightSegment = (): FlightSegment => ({
   airline: '',
@@ -107,6 +109,35 @@ const loadFlightInfo = (): FlightInfo => {
     };
   } catch {
     return createEmptyFlightInfo();
+  }
+};
+
+const loadItineraryNotes = (): ItineraryNotes => {
+  if (typeof window === 'undefined') {
+    return {};
+  }
+
+  const rawNotes = window.localStorage.getItem(ITINERARY_NOTES_STORAGE_KEY);
+
+  if (!rawNotes) {
+    return {};
+  }
+
+  try {
+    const parsedNotes = JSON.parse(rawNotes) as Record<string, unknown>;
+
+    return Object.fromEntries(
+      Object.entries(parsedNotes).flatMap(([day, note]) => {
+        if (typeof note !== 'string') {
+          return [];
+        }
+
+        const normalizedNote = note.trim();
+        return normalizedNote ? [[day, normalizedNote]] : [];
+      }),
+    );
+  } catch {
+    return {};
   }
 };
 
@@ -186,7 +217,10 @@ export default function App() {
   });
   const [flightInfo, setFlightInfo] = useState<FlightInfo>(() => loadFlightInfo());
   const [flightInfoDraft, setFlightInfoDraft] = useState<FlightInfo>(() => loadFlightInfo());
+  const [itineraryNotes, setItineraryNotes] = useState<ItineraryNotes>(() => loadItineraryNotes());
+  const [itineraryNotesDraft, setItineraryNotesDraft] = useState<ItineraryNotes>(() => loadItineraryNotes());
   const [activeFlightEditor, setActiveFlightEditor] = useState<FlightSegmentKey | null>(null);
+  const [activeItineraryNoteEditor, setActiveItineraryNoteEditor] = useState<string | null>(null);
   const [itineraryViewMode, setItineraryViewMode] = useState<ItineraryViewMode>('card');
   const [expandedItineraryDays, setExpandedItineraryDays] = useState<string[]>([]);
   const [foodCategoryFilter, setFoodCategoryFilter] = useState(ALL_FILTER_LABEL);
@@ -334,6 +368,72 @@ export default function App() {
     }));
   };
 
+  const updateItineraryNoteDraft = (day: string, value: string) => {
+    setItineraryNotesDraft((current) => ({
+      ...current,
+      [day]: value,
+    }));
+  };
+
+  const applyItineraryNote = (day: string) => {
+    const normalizedNote = (itineraryNotesDraft[day] ?? '').trim();
+
+    setItineraryNotes((current) => {
+      const nextNotes = { ...current };
+
+      if (normalizedNote) {
+        nextNotes[day] = normalizedNote;
+      } else {
+        delete nextNotes[day];
+      }
+
+      if (typeof window !== 'undefined') {
+        if (Object.keys(nextNotes).length > 0) {
+          window.localStorage.setItem(ITINERARY_NOTES_STORAGE_KEY, JSON.stringify(nextNotes));
+        } else {
+          window.localStorage.removeItem(ITINERARY_NOTES_STORAGE_KEY);
+        }
+      }
+
+      return nextNotes;
+    });
+
+    setItineraryNotesDraft((current) => {
+      const nextDraft = { ...current };
+
+      if (normalizedNote) {
+        nextDraft[day] = normalizedNote;
+      } else {
+        delete nextDraft[day];
+      }
+
+      return nextDraft;
+    });
+  };
+
+  const clearItineraryNote = (day: string) => {
+    setItineraryNotes((current) => {
+      const nextNotes = { ...current };
+      delete nextNotes[day];
+
+      if (typeof window !== 'undefined') {
+        if (Object.keys(nextNotes).length > 0) {
+          window.localStorage.setItem(ITINERARY_NOTES_STORAGE_KEY, JSON.stringify(nextNotes));
+        } else {
+          window.localStorage.removeItem(ITINERARY_NOTES_STORAGE_KEY);
+        }
+      }
+
+      return nextNotes;
+    });
+
+    setItineraryNotesDraft((current) => {
+      const nextDraft = { ...current };
+      delete nextDraft[day];
+      return nextDraft;
+    });
+  };
+
   const toggleItineraryExpanded = (day: string) => {
     setExpandedItineraryDays((current) =>
       current.includes(day) ? current.filter((item) => item !== day) : [...current, day],
@@ -361,6 +461,147 @@ export default function App() {
     setSelectedMapTarget(null);
   };
 
+  const renderItineraryNoteEditor = (day: string, compact = false) => {
+    const savedNote = itineraryNotes[day] ?? '';
+    const draftNote = itineraryNotesDraft[day] ?? '';
+    const hasSavedNote = savedNote.length > 0;
+    const hasUnsavedChanges = draftNote.trim() !== savedNote;
+
+    return (
+      <div
+        className={`rounded-xl border border-[#E8DCC4] bg-[#FAF5F0] p-3 dark:border-[#5C4D42] dark:bg-[#2A2421] ${compact ? '' : 'mt-3'}`}
+        onClick={(event) => event.stopPropagation()}
+      >
+        <div className="mb-3 flex items-start justify-between gap-3">
+          <div className="space-y-1">
+            <p className="text-sm font-semibold text-[#4A3F35] dark:text-[#FDF8F5]">行程筆記</p>
+            <p className="text-xs text-[#8C7A6B] dark:text-[#A89F91]">
+              {hasUnsavedChanges ? '有未儲存變更' : hasSavedNote ? '已儲存到此裝置' : '尚未儲存筆記'}
+            </p>
+          </div>
+          <div className="flex gap-2">
+            <button
+              type="button"
+              onClick={() => clearItineraryNote(day)}
+              aria-label={`清空 ${day} 筆記`}
+              title="清空筆記"
+              className="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-[#E8DCC4] text-[#8C7A6B] transition hover:border-[#D9A0A5] hover:text-[#6B5B4D] dark:border-[#5C4D42] dark:text-[#A89F91] dark:hover:border-[#9EBA9E] dark:hover:text-[#D1C4B5]"
+            >
+              <Trash2 className="h-4 w-4" />
+            </button>
+            <button
+              type="button"
+              onClick={() => applyItineraryNote(day)}
+              aria-label={`儲存 ${day} 筆記`}
+              title="儲存筆記"
+              className="inline-flex h-9 w-9 items-center justify-center rounded-xl bg-[#D9A0A5] text-white transition hover:bg-[#C88992] dark:bg-[#7A907A] dark:hover:bg-[#6A816A]"
+            >
+              <Save className="h-4 w-4" />
+            </button>
+          </div>
+        </div>
+
+        <textarea
+          value={draftNote}
+          onChange={(event) => updateItineraryNoteDraft(day, event.target.value)}
+          onClick={(event) => event.stopPropagation()}
+          placeholder="寫下提醒、餐廳候補、購物清單或備案..."
+          rows={compact ? 3 : 4}
+          className="w-full rounded-xl border border-[#E8DCC4] bg-white px-3 py-2 text-sm text-[#4A3F35] outline-none transition focus:border-[#D9A0A5] focus:ring-2 focus:ring-[#D9A0A5]/20 dark:border-[#5C4D42] dark:bg-[#362F2B] dark:text-[#FDF8F5] dark:placeholder:text-[#8C7A6B] dark:focus:border-[#9EBA9E] dark:focus:ring-[#9EBA9E]/20"
+        />
+      </div>
+    );
+  };
+
+  const renderSavedItineraryNote = (day: string) => {
+    const savedNote = itineraryNotes[day] ?? '';
+    const hasSavedNote = savedNote.length > 0;
+
+    return (
+      <button
+        type="button"
+        onClick={() => setActiveItineraryNoteEditor((current) => current === day ? null : day)}
+        className={`flex w-full items-start gap-2 rounded-lg border border-[#F0E5E1] bg-[#FDF8F5] text-left text-sm text-[#6B5B4D] transition hover:border-[#D9A0A5] dark:border-[#5C4D42]/50 dark:bg-[#4A3F35]/50 dark:text-[#D1C4B5] dark:hover:border-[#9EBA9E] ${hasSavedNote ? 'p-3' : 'px-3 py-2'}`}
+      >
+        <Pencil className="w-4 h-4 text-[#D9A0A5] dark:text-[#E2C07C] shrink-0 mt-0.5" />
+        <div className="space-y-1">
+          <p className="text-xs font-semibold text-[#4A3F35] dark:text-[#FDF8F5]">行程筆記</p>
+          {hasSavedNote ? (
+            <p className="whitespace-pre-wrap break-words text-xs leading-6 text-[#8C7A6B] dark:text-[#A89F91]">
+              {savedNote}
+            </p>
+          ) : (
+            <div className="h-0" />
+          )}
+        </div>
+      </button>
+    );
+  };
+
+  const renderFlightSummaryCard = (
+    day: string,
+    flightSegment: FlightSegment,
+    flightSegmentKey: FlightSegmentKey,
+    compact = false,
+  ) => {
+    const hasSavedFlightInfo = hasFlightSegmentData(flightSegment);
+
+    return (
+      <button
+        type="button"
+        onClick={(event) => {
+          if (compact) {
+            event.stopPropagation();
+          }
+          setActiveFlightEditor((current) => current === flightSegmentKey ? null : flightSegmentKey);
+        }}
+        className={`flex w-full items-start gap-2 rounded-lg border border-[#F0E5E1] bg-[#FDF8F5] text-left text-sm text-[#6B5B4D] transition hover:border-[#D9A0A5] dark:border-[#5C4D42]/50 dark:bg-[#4A3F35]/50 dark:text-[#D1C4B5] dark:hover:border-[#9EBA9E] ${hasSavedFlightInfo ? 'p-3' : 'px-3 py-2'}`}
+      >
+        {day === 'Day 1' ? (
+          <PlaneLanding className="w-4 h-4 text-[#D9A0A5] dark:text-[#E2C07C] shrink-0 mt-0.5" />
+        ) : (
+          <PlaneTakeoff className="w-4 h-4 text-[#D9A0A5] dark:text-[#E2C07C] shrink-0 mt-0.5" />
+        )}
+        <div className="space-y-1">
+          <p className="text-xs font-semibold text-[#4A3F35] dark:text-[#FDF8F5]">
+            {day === 'Day 1' ? '抵達航班' : '返程航班'}
+          </p>
+          {hasSavedFlightInfo ? (
+            <>
+              {(flightSegment.airline || flightSegment.flightNumber) && (
+                <p className="leading-snug">
+                  {[flightSegment.airline, flightSegment.flightNumber].filter(Boolean).join(' ')}
+                </p>
+              )}
+              {(flightSegment.departureAirport || flightSegment.arrivalAirport) && (
+                <p className="leading-snug">
+                  {[flightSegment.departureAirport, flightSegment.arrivalAirport].filter(Boolean).join(' → ')}
+                </p>
+              )}
+              {(flightSegment.departureTime || flightSegment.arrivalTime) && (
+                <p className="text-xs leading-snug text-[#8C7A6B] dark:text-[#A89F91]">
+                  {[formatFlightDateTime(flightSegment.departureTime), formatFlightDateTime(flightSegment.arrivalTime)].filter(Boolean).join(' → ')}
+                </p>
+              )}
+              {flightSegment.terminal && (
+                <p className="text-xs leading-snug text-[#8C7A6B] dark:text-[#A89F91]">
+                  {flightSegment.terminal}
+                </p>
+              )}
+              {flightSegment.note && (
+                <p className="text-xs leading-snug text-[#8C7A6B] dark:text-[#A89F91]">
+                  {flightSegment.note}
+                </p>
+              )}
+            </>
+          ) : (
+            <div className="h-0" />
+          )}
+        </div>
+      </button>
+    );
+  };
+
   const renderItineraryItem = (item: ItineraryItem, idx: number) => {
     const flightSegment =
       item.day === 'Day 1'
@@ -375,29 +616,11 @@ export default function App() {
           ? 'departure'
           : null;
     const hasFlightInfo = flightSegment ? hasFlightSegmentData(flightSegment) : false;
-    const isConfirmed = item.status.includes('✅');
     const isListView = itineraryViewMode === 'list';
     const isExpanded = expandedItineraryDays.includes(item.day);
+    const isNoteEditorOpen = activeItineraryNoteEditor === item.day;
 
     if (isListView) {
-      const listSummaryParts = [
-        item.schedule,
-        item.hotel !== '—' ? `住宿：${item.hotel}` : '',
-        item.rainBackup !== '—' ? `雨備：${item.rainBackup}` : '',
-        flightSegment && hasFlightInfo
-          ? `${item.day === 'Day 1' ? '抵達航班' : '返程航班'}`
-          : '',
-      ].filter(Boolean);
-      const flightSummaryParts = flightSegment && hasFlightInfo
-        ? [
-            [flightSegment.airline, flightSegment.flightNumber].filter(Boolean).join(' '),
-            [flightSegment.departureAirport, flightSegment.arrivalAirport].filter(Boolean).join(' → '),
-            [formatFlightDateTime(flightSegment.departureTime), formatFlightDateTime(flightSegment.arrivalTime)].filter(Boolean).join(' → '),
-            flightSegment.terminal,
-            flightSegment.note,
-          ].filter(Boolean)
-        : [];
-
       return (
         <div
           key={idx}
@@ -431,10 +654,6 @@ export default function App() {
                   {item.theme}
                 </h3>
                 <div className="flex shrink-0 items-center gap-2 justify-end">
-                  <span className={`flex items-center whitespace-nowrap text-[10px] font-medium px-2 py-1 rounded-full ${isConfirmed ? 'text-[#7A907A] dark:text-[#9EBA9E] bg-[#FDF8F5] dark:bg-[#7A907A]/20' : 'text-[#C5A059] dark:text-[#E0C082] bg-[#FDFBF5] dark:bg-[#C5A059]/20'}`}>
-                    {isConfirmed ? <CheckCircle2 className="w-3 h-3 mr-1" /> : <AlertCircle className="w-3 h-3 mr-1" />}
-                    {isConfirmed ? '已確認' : '待處理'}
-                  </span>
                   <span className="inline-flex items-center justify-center rounded-full border border-[#E8DCC4] bg-[#FAF5F0] p-1.5 text-[#8C7A6B] dark:border-[#5C4D42] dark:bg-[#2A2421] dark:text-[#A89F91]">
                     {isExpanded ? <ChevronUp className="h-3.5 w-3.5" /> : <ChevronDown className="h-3.5 w-3.5" />}
                   </span>
@@ -464,32 +683,7 @@ export default function App() {
                       </div>
                     )}
 
-                    {flightSummaryParts.length > 0 && (
-                      <div className="space-y-1">
-                        <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#8C7A6B] dark:text-[#A89F91]">
-                          {item.day === 'Day 1' ? '抵達航班' : '返程航班'}
-                        </p>
-                        <div className="space-y-1">
-                          {flightSummaryParts.map((detail, detailIdx) => (
-                            <p key={detailIdx} className="leading-6">{detail}</p>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-
-                    {flightSegmentKey && (
-                      <button
-                        type="button"
-                        onClick={(event) => {
-                          event.stopPropagation();
-                          setActiveFlightEditor((current) => current === flightSegmentKey ? null : flightSegmentKey);
-                        }}
-                        className="inline-flex items-center gap-1 rounded-full border border-[#E8DCC4] bg-[#FAF5F0] px-2.5 py-1 text-[10px] font-medium text-[#8C7A6B] transition hover:border-[#D9A0A5] hover:text-[#6B5B4D] dark:border-[#5C4D42] dark:bg-[#2A2421] dark:text-[#A89F91] dark:hover:border-[#9EBA9E] dark:hover:text-[#D1C4B5]"
-                      >
-                        {item.day === 'Day 1' ? <PlaneLanding className="h-3 w-3" /> : <PlaneTakeoff className="h-3 w-3" />}
-                        {activeFlightEditor === flightSegmentKey ? '收起航班' : '航班資訊'}
-                      </button>
-                    )}
+                    {flightSegmentKey && flightSegment && renderFlightSummaryCard(item.day, flightSegment, flightSegmentKey, true)}
                   </div>
                 </div>
               )}
@@ -588,6 +782,10 @@ export default function App() {
                 </div>
               </div>
           )}
+
+          {isExpanded && renderSavedItineraryNote(item.day)}
+
+          {isExpanded && isNoteEditorOpen && renderItineraryNoteEditor(item.day, true)}
         </div>
       );
     }
@@ -605,23 +803,6 @@ export default function App() {
                   {item.date} ({item.weekday})
                 </span>
               </div>
-            </div>
-
-            <div className="flex items-center gap-2">
-              {flightSegmentKey && (
-                <button
-                  type="button"
-                  onClick={() => setActiveFlightEditor((current) => current === flightSegmentKey ? null : flightSegmentKey)}
-                  className="inline-flex items-center gap-1 rounded-full border border-[#E8DCC4] bg-[#FAF5F0] px-2.5 py-1 text-[10px] font-medium text-[#8C7A6B] transition hover:border-[#D9A0A5] hover:text-[#6B5B4D] dark:border-[#5C4D42] dark:bg-[#2A2421] dark:text-[#A89F91] dark:hover:border-[#9EBA9E] dark:hover:text-[#D1C4B5]"
-                >
-                  {item.day === 'Day 1' ? <PlaneLanding className="h-3 w-3" /> : <PlaneTakeoff className="h-3 w-3" />}
-                  {activeFlightEditor === flightSegmentKey ? '收起航班' : '航班資訊'}
-                </button>
-              )}
-              <span className={`flex items-center text-[10px] font-medium px-2 py-1 rounded-full ${isConfirmed ? 'text-[#7A907A] dark:text-[#9EBA9E] bg-[#FDF8F5] dark:bg-[#7A907A]/20' : 'text-[#C5A059] dark:text-[#E0C082] bg-[#FDFBF5] dark:bg-[#C5A059]/20'}`}>
-                {isConfirmed ? <CheckCircle2 className="w-3 h-3 mr-1" /> : <AlertCircle className="w-3 h-3 mr-1" />}
-                {isConfirmed ? '已確認' : '待處理'}
-              </span>
             </div>
           </div>
 
@@ -650,45 +831,7 @@ export default function App() {
             </div>
 
             <div className="space-y-3">
-              {flightSegment && hasFlightInfo && (
-                <div className="flex items-start gap-2 text-sm text-[#6B5B4D] dark:text-[#D1C4B5] bg-[#FDF8F5] dark:bg-[#4A3F35]/50 p-3 rounded-lg border border-[#F0E5E1] dark:border-[#5C4D42]/50">
-                  {item.day === 'Day 1' ? (
-                    <PlaneLanding className="w-4 h-4 text-[#D9A0A5] dark:text-[#E2C07C] shrink-0 mt-0.5" />
-                  ) : (
-                    <PlaneTakeoff className="w-4 h-4 text-[#D9A0A5] dark:text-[#E2C07C] shrink-0 mt-0.5" />
-                  )}
-                  <div className="space-y-1">
-                    <p className="text-xs font-semibold text-[#4A3F35] dark:text-[#FDF8F5]">
-                      {item.day === 'Day 1' ? '抵達航班' : '返程航班'}
-                    </p>
-                    {(flightSegment.airline || flightSegment.flightNumber) && (
-                      <p className="leading-snug">
-                        {[flightSegment.airline, flightSegment.flightNumber].filter(Boolean).join(' ')}
-                      </p>
-                    )}
-                    {(flightSegment.departureAirport || flightSegment.arrivalAirport) && (
-                      <p className="leading-snug">
-                        {[flightSegment.departureAirport, flightSegment.arrivalAirport].filter(Boolean).join(' → ')}
-                      </p>
-                    )}
-                    {(flightSegment.departureTime || flightSegment.arrivalTime) && (
-                      <p className="text-xs leading-snug text-[#8C7A6B] dark:text-[#A89F91]">
-                        {[formatFlightDateTime(flightSegment.departureTime), formatFlightDateTime(flightSegment.arrivalTime)].filter(Boolean).join(' → ')}
-                      </p>
-                    )}
-                    {flightSegment.terminal && (
-                      <p className="text-xs leading-snug text-[#8C7A6B] dark:text-[#A89F91]">
-                        {flightSegment.terminal}
-                      </p>
-                    )}
-                    {flightSegment.note && (
-                      <p className="text-xs leading-snug text-[#8C7A6B] dark:text-[#A89F91]">
-                        {flightSegment.note}
-                      </p>
-                    )}
-                  </div>
-                </div>
-              )}
+              {flightSegmentKey && flightSegment && renderFlightSummaryCard(item.day, flightSegment, flightSegmentKey)}
 
               {flightSegmentKey && activeFlightEditor === flightSegmentKey && (
                 <div className="rounded-xl border border-[#E8DCC4] bg-[#FAF5F0] p-3 dark:border-[#5C4D42] dark:bg-[#2A2421]">
@@ -782,6 +925,10 @@ export default function App() {
                   </div>
                 </div>
               )}
+
+              {renderSavedItineraryNote(item.day)}
+
+              {isNoteEditorOpen && renderItineraryNoteEditor(item.day)}
             </div>
           </div>
         </div>
