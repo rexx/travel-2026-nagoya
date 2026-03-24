@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { CalendarDays, UtensilsCrossed, Map, MapPin, Clock, Banknote, Info, Pencil, CloudRain, AlertCircle, CheckCircle2, BedDouble, Sun, Moon, CreditCard, Smartphone, MapPinned, Settings2, X, PlaneTakeoff, PlaneLanding, Trash2, Save, LayoutGrid, List, ChevronDown, ChevronUp } from 'lucide-react';
+import { CalendarDays, UtensilsCrossed, Map, MapPin, Clock, Banknote, Info, Pencil, CloudRain, AlertCircle, CheckCircle2, BedDouble, Sun, Moon, CreditCard, Smartphone, MapPinned, Settings2, X, PlaneTakeoff, PlaneLanding, Trash2, Save, LayoutGrid, List, ChevronDown, ChevronUp, WifiOff, ExternalLink } from 'lucide-react';
 import { itineraryData, foodData, attractionData, creditCardData, promoData, ePayData } from './data';
 import { motion, AnimatePresence } from 'motion/react';
 import { AttractionItem, FoodItem, ItineraryItem } from './types';
@@ -190,8 +190,25 @@ const buildGoogleMapsEmbedUrl = (query: string): string => {
   return `https://www.google.com/maps?q=${encodeURIComponent(trimmedQuery)}&z=15&output=embed`;
 };
 
+const buildGoogleMapsExternalUrl = (query: string): string => {
+  const trimmedQuery = query.trim();
+
+  if (!trimmedQuery) {
+    return '';
+  }
+
+  return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(trimmedQuery)}`;
+};
+
 export default function App() {
   const [activeTab, setActiveTab] = useState<Tab>('itinerary');
+  const [isOffline, setIsOffline] = useState(() => {
+    if (typeof window === 'undefined') {
+      return false;
+    }
+
+    return !window.navigator.onLine;
+  });
   const [isDarkMode, setIsDarkMode] = useState(() => {
     if (typeof window !== 'undefined') {
       return window.matchMedia('(prefers-color-scheme: dark)').matches;
@@ -246,7 +263,9 @@ export default function App() {
     return matchesCategory && matchesConditions;
   });
   const selectedMapUrl = selectedMapTarget ? buildGoogleMapsEmbedUrl(selectedMapTarget.mapQuery) : '';
+  const selectedMapExternalUrl = selectedMapTarget ? buildGoogleMapsExternalUrl(selectedMapTarget.mapQuery) : '';
   const displayedMapUrl = selectedMapUrl || mapEmbedUrl.trim();
+  const canRenderMapIframe = !isOffline && Boolean(displayedMapUrl);
 
   useEffect(() => {
     const isStandalone = isStandaloneWebApp();
@@ -267,6 +286,21 @@ export default function App() {
     const themeColorMeta = document.querySelector('meta[name="theme-color"]');
     themeColorMeta?.setAttribute('content', themeColor);
   }, [isDarkMode]);
+
+  useEffect(() => {
+    const syncOnlineState = () => {
+      setIsOffline(!window.navigator.onLine);
+    };
+
+    syncOnlineState();
+    window.addEventListener('online', syncOnlineState);
+    window.addEventListener('offline', syncOnlineState);
+
+    return () => {
+      window.removeEventListener('online', syncOnlineState);
+      window.removeEventListener('offline', syncOnlineState);
+    };
+  }, []);
 
   useEffect(() => {
     const updateNavHeight = () => {
@@ -938,6 +972,14 @@ export default function App() {
 
   return (
     <div className={`min-h-screen w-full max-w-full overflow-x-hidden bg-[#FAF5F0] dark:bg-[#2A2421] text-[#4A3F35] dark:text-[#FDF8F5] font-sans transition-colors duration-200 ${activeTab === 'map' ? 'pb-0' : 'pb-24'}`}>
+      {isOffline && (
+        <div className={`pointer-events-none fixed left-1/2 z-40 -translate-x-1/2 ${activeTab === 'map' ? 'top-4' : 'top-20'}`}>
+          <div className="flex items-center gap-2 rounded-full border border-[#E8DCC4] bg-white/95 px-4 py-2 text-xs font-medium text-[#6B5B4D] shadow-lg backdrop-blur-sm dark:border-[#5C4D42] dark:bg-[#2A2421]/95 dark:text-[#D1C4B5]">
+            <WifiOff className="h-3.5 w-3.5 text-[#D9A0A5] dark:text-[#E2C07C]" />
+            離線模式：內容與本機筆記可用，地圖需恢復連線後載入
+          </div>
+        </div>
+      )}
       {activeTab !== 'map' && (
         <header className="bg-white/95 backdrop-blur-md dark:bg-[#362F2B]/95 shadow-sm dark:shadow-[#2A2421]/50 sticky top-0 z-10">
           <div className="max-w-3xl mx-auto px-4 py-3 flex items-center justify-between">
@@ -1411,7 +1453,7 @@ export default function App() {
                     )}
                   </div>
                 </div>
-                {displayedMapUrl ? (
+                {canRenderMapIframe ? (
                   <iframe
                     src={displayedMapUrl}
                     title="Nagoya travel map"
@@ -1422,10 +1464,32 @@ export default function App() {
                 ) : (
                   <div className="flex h-full items-center justify-center px-6 text-center">
                     <div className="max-w-md rounded-3xl border border-dashed border-[#D8C8B8] bg-white/80 px-6 py-8 shadow-sm dark:border-[#5C4D42] dark:bg-[#362F2B]/80">
-                      <p className="text-base font-semibold text-[#4A3F35] dark:text-[#FDF8F5]">尚未設定地圖網址</p>
-                      <p className="mt-2 text-sm leading-6 text-[#8C7A6B] dark:text-[#A89F91]">
-                        請貼上 Google Maps 自訂地圖 iframe 的 `src`，例如 `https://www.google.com/maps/d/embed?...`
+                      <p className="text-base font-semibold text-[#4A3F35] dark:text-[#FDF8F5]">
+                        {isOffline ? '離線時無法載入 Google 地圖' : '尚未設定地圖網址'}
                       </p>
+                      <p className="mt-2 text-sm leading-6 text-[#8C7A6B] dark:text-[#A89F91]">
+                        {isOffline
+                          ? selectedMapTarget
+                            ? `目前選取的是「${selectedMapTarget.label}」。景點資料仍可瀏覽，恢復連線後即可重新載入地圖。`
+                            : '行程與景點資訊仍可離線查看，但 Google Maps 內嵌地圖需要網路連線。'
+                          : '請貼上 Google Maps 自訂地圖 iframe 的 `src`，例如 `https://www.google.com/maps/d/embed?...`'}
+                      </p>
+                      {selectedMapTarget && selectedMapExternalUrl && (
+                        <a
+                          href={selectedMapExternalUrl}
+                          target="_blank"
+                          rel="noreferrer"
+                          className={`mt-4 inline-flex items-center gap-2 rounded-full border px-4 py-2 text-sm font-medium transition ${
+                            isOffline
+                              ? 'pointer-events-none border-[#E8DCC4] bg-[#FAF5F0] text-[#A89F91] dark:border-[#5C4D42] dark:bg-[#2A2421] dark:text-[#8C7A6B]'
+                              : 'border-[#D9A0A5] bg-[#D9A0A5] text-white hover:bg-[#C88992] dark:border-[#7A907A] dark:bg-[#7A907A] dark:hover:bg-[#6A816A]'
+                          }`}
+                          aria-disabled={isOffline}
+                        >
+                          <ExternalLink className="h-4 w-4" />
+                          {isOffline ? '恢復連線後可開啟地圖' : '用 Google Maps 開啟'}
+                        </a>
+                      )}
                     </div>
                   </div>
                 )}
