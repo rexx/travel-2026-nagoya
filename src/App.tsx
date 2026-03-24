@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { CalendarDays, UtensilsCrossed, Map, MapPin, Clock, Banknote, Info, CloudRain, AlertCircle, CheckCircle2, BedDouble, Sun, Moon, CreditCard, Smartphone, MapPinned, Settings2, X, PlaneTakeoff, PlaneLanding, Trash2, Save, LayoutGrid, List, ChevronDown, ChevronUp } from 'lucide-react';
 import { itineraryData, foodData, attractionData, creditCardData, promoData, ePayData } from './data';
 import { motion, AnimatePresence } from 'motion/react';
-import { ItineraryItem } from './types';
+import { AttractionItem, FoodItem, ItineraryItem } from './types';
 
 type Tab = 'itinerary' | 'food' | 'attractions' | 'cards' | 'map';
 type ItineraryViewMode = 'card' | 'list';
@@ -53,6 +53,11 @@ interface FlightSegment {
 interface FlightInfo {
   arrival: FlightSegment;
   departure: FlightSegment;
+}
+
+interface MapTarget {
+  label: string;
+  mapQuery: string;
 }
 
 const createEmptyFlightSegment = (): FlightSegment => ({
@@ -144,6 +149,16 @@ const getCategoryOptions = (items: Array<{ type: string }>): string[] => [
 
 const isRecommendedForFilter = (value: string): boolean => value.includes('✅');
 
+const buildGoogleMapsEmbedUrl = (query: string): string => {
+  const trimmedQuery = query.trim();
+
+  if (!trimmedQuery) {
+    return '';
+  }
+
+  return `https://www.google.com/maps?q=${encodeURIComponent(trimmedQuery)}&z=15&output=embed`;
+};
+
 export default function App() {
   const [activeTab, setActiveTab] = useState<Tab>('itinerary');
   const [isDarkMode, setIsDarkMode] = useState(() => {
@@ -177,6 +192,7 @@ export default function App() {
   const [foodCategoryFilter, setFoodCategoryFilter] = useState(ALL_FILTER_LABEL);
   const [attractionCategoryFilter, setAttractionCategoryFilter] = useState(ALL_FILTER_LABEL);
   const [attractionConditionFilters, setAttractionConditionFilters] = useState<AttractionConditionKey[]>([]);
+  const [selectedMapTarget, setSelectedMapTarget] = useState<MapTarget | null>(null);
 
   const foodCategoryOptions = getCategoryOptions(foodData);
   const attractionCategoryOptions = getCategoryOptions(attractionData);
@@ -195,6 +211,8 @@ export default function App() {
 
     return matchesCategory && matchesConditions;
   });
+  const selectedMapUrl = selectedMapTarget ? buildGoogleMapsEmbedUrl(selectedMapTarget.mapQuery) : '';
+  const displayedMapUrl = selectedMapUrl || mapEmbedUrl.trim();
 
   useEffect(() => {
     const isStandalone = isStandaloneWebApp();
@@ -328,6 +346,19 @@ export default function App() {
         ? current.filter((item) => item !== condition)
         : [...current, condition],
     );
+  };
+
+  const focusMapTarget = (item: FoodItem | AttractionItem) => {
+    setSelectedMapTarget({
+      label: item.name,
+      mapQuery: item.mapQuery,
+    });
+    setIsMapSettingsOpen(false);
+    setActiveTab('map');
+  };
+
+  const clearSelectedMapTarget = () => {
+    setSelectedMapTarget(null);
   };
 
   const renderItineraryItem = (item: ItineraryItem, idx: number) => {
@@ -882,7 +913,13 @@ export default function App() {
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {filteredFoodData.map((item, idx) => (
-                  <div key={idx} className="bg-white dark:bg-[#362F2B] p-4 rounded-2xl shadow-sm border border-[#F0E5E1] dark:border-[#4A3F35] hover:shadow-md transition-all duration-200">
+                  <button
+                    key={idx}
+                    type="button"
+                    onClick={() => focusMapTarget(item)}
+                    className="bg-white dark:bg-[#362F2B] p-4 rounded-2xl shadow-sm border border-[#F0E5E1] dark:border-[#4A3F35] hover:shadow-md transition-all duration-200 text-left focus:outline-none focus:ring-2 focus:ring-[#D9A0A5]/40 dark:focus:ring-[#E2C07C]/40"
+                    aria-label={`查看 ${item.name} 的地圖`}
+                  >
                     <div className="flex justify-between items-start mb-2">
                       <h3 className="text-base font-bold text-[#4A3F35] dark:text-[#FDF8F5] leading-tight font-serif">{item.name}</h3>
                       <span className="text-[10px] font-medium text-orange-600 dark:text-[#E2C07C] bg-[#FDF8F5] dark:bg-[#E2C07C]/20 px-2 py-1 rounded-md whitespace-nowrap ml-2">
@@ -919,7 +956,7 @@ export default function App() {
                         {item.reservation}
                       </p>
                     </div>
-                  </div>
+                  </button>
                 ))}
               </div>
             </motion.div>
@@ -994,7 +1031,13 @@ export default function App() {
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {filteredAttractionData.map((item, idx) => (
-                  <div key={idx} className="bg-white dark:bg-[#362F2B] p-4 rounded-2xl shadow-sm border border-[#F0E5E1] dark:border-[#4A3F35] hover:shadow-md transition-all duration-200">
+                  <button
+                    key={idx}
+                    type="button"
+                    onClick={() => focusMapTarget(item)}
+                    className="bg-white dark:bg-[#362F2B] p-4 rounded-2xl shadow-sm border border-[#F0E5E1] dark:border-[#4A3F35] hover:shadow-md transition-all duration-200 text-left focus:outline-none focus:ring-2 focus:ring-[#D9A0A5]/40 dark:focus:ring-[#E2C07C]/40"
+                    aria-label={`查看 ${item.name} 的地圖`}
+                  >
                     <div className="flex justify-between items-start mb-2">
                       <h3 className="text-base font-bold text-[#4A3F35] dark:text-[#FDF8F5] leading-tight pr-2 font-serif">{item.name}</h3>
                       <span className="text-[10px] font-medium text-indigo-600 dark:text-[#E2C07C] bg-[#FDF8F5] dark:bg-[#E2C07C]/20 px-2 py-1 rounded-md whitespace-nowrap shrink-0">
@@ -1033,7 +1076,7 @@ export default function App() {
                         <span className="leading-snug">{item.notes}</span>
                       </p>
                     </div>
-                  </div>
+                  </button>
                 ))}
               </div>
             </motion.div>
@@ -1162,7 +1205,26 @@ export default function App() {
               className="h-full flex flex-col bg-[#FAF5F0] dark:bg-[#2A2421]"
             >
               <div className="relative flex-1 overflow-hidden">
-                <div className="pointer-events-none absolute inset-x-0 top-0 z-20 flex justify-end px-4 pt-16">
+                <div className="pointer-events-none absolute inset-x-0 top-0 z-20 flex items-start justify-between gap-3 px-4 pt-16">
+                  <div className="pointer-events-auto flex max-w-[min(18rem,calc(100vw-7rem))] flex-col gap-2">
+                    {selectedMapTarget && (
+                      <div className="rounded-2xl border border-white/70 bg-white/90 px-4 py-3 shadow-lg backdrop-blur-sm dark:border-[#5C4D42]/80 dark:bg-[#2A2421]/90">
+                        <p className="text-xs font-medium uppercase tracking-[0.18em] text-[#8C7A6B] dark:text-[#A89F91]">
+                          目前定位
+                        </p>
+                        <p className="mt-1 text-sm font-semibold text-[#4A3F35] dark:text-[#FDF8F5]">
+                          {selectedMapTarget.label}
+                        </p>
+                        <button
+                          type="button"
+                          onClick={clearSelectedMapTarget}
+                          className="mt-3 inline-flex items-center rounded-full border border-[#E8DCC4] bg-[#FAF5F0] px-3 py-1.5 text-xs font-medium text-[#6B5B4D] transition hover:border-[#D9A0A5] hover:text-[#D9A0A5] dark:border-[#5C4D42] dark:bg-[#362F2B] dark:text-[#D1C4B5] dark:hover:border-[#E2C07C] dark:hover:text-[#E2C07C]"
+                        >
+                          回到總覽地圖
+                        </button>
+                      </div>
+                    )}
+                  </div>
                   <div className="pointer-events-auto flex flex-col items-end gap-3">
                     <button
                       type="button"
@@ -1202,9 +1264,9 @@ export default function App() {
                     )}
                   </div>
                 </div>
-                {mapEmbedUrl.trim() ? (
+                {displayedMapUrl ? (
                   <iframe
-                    src={mapEmbedUrl.trim()}
+                    src={displayedMapUrl}
                     title="Nagoya travel map"
                     loading="lazy"
                     className="h-full w-full border-0"
