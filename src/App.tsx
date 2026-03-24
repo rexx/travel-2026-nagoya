@@ -1,14 +1,21 @@
 import { useState, useEffect, useRef } from 'react';
-import { CalendarDays, UtensilsCrossed, Map, MapPin, Clock, Banknote, Info, CloudRain, Users, AlertCircle, CheckCircle2, BedDouble, Sun, Moon, CreditCard, Smartphone, MapPinned, Settings2, X, PlaneTakeoff, PlaneLanding, Trash2, Save, LayoutGrid, List, ChevronDown, ChevronUp } from 'lucide-react';
+import { CalendarDays, UtensilsCrossed, Map, MapPin, Clock, Banknote, Info, CloudRain, AlertCircle, CheckCircle2, BedDouble, Sun, Moon, CreditCard, Smartphone, MapPinned, Settings2, X, PlaneTakeoff, PlaneLanding, Trash2, Save, LayoutGrid, List, ChevronDown, ChevronUp } from 'lucide-react';
 import { itineraryData, foodData, attractionData, creditCardData, promoData, ePayData } from './data';
 import { motion, AnimatePresence } from 'motion/react';
 import { ItineraryItem } from './types';
 
 type Tab = 'itinerary' | 'food' | 'attractions' | 'cards' | 'map';
 type ItineraryViewMode = 'card' | 'list';
+type AttractionConditionKey = 'rain' | 'weekend';
+
 const MAP_EMBED_URL_STORAGE_KEY = 'nagoya-map-embed-url';
 const FLIGHT_INFO_STORAGE_KEY = 'nagoya-flight-info';
 const GOOGLE_MAPS_EMBED_PLACEHOLDER = 'https://www.google.com/maps/d/embed?...';
+const ALL_FILTER_LABEL = '全部';
+const ATTRACTION_CONDITION_LABELS: Record<AttractionConditionKey, string> = {
+  rain: '適合雨天',
+  weekend: '適合假日',
+};
 const FLIGHT_SEGMENT_LABELS = {
   arrival: '去程',
   departure: '回程',
@@ -108,6 +115,19 @@ const formatFlightDateTime = (value: string): string => {
 const formatCardPageAmounts = (value: string): string =>
   value.replace(/(?<![\d/.,])(\d{4,})(?![\d/.%])/g, (match) => Number(match).toLocaleString('en-US'));
 
+const splitTypeCategories = (value: string): string[] =>
+  value
+    .split('・')
+    .map((category) => category.trim())
+    .filter(Boolean);
+
+const getCategoryOptions = (items: Array<{ type: string }>): string[] => [
+  ALL_FILTER_LABEL,
+  ...new Set(items.flatMap((item) => splitTypeCategories(item.type))),
+];
+
+const isRecommendedForFilter = (value: string): boolean => value.includes('✅');
+
 export default function App() {
   const [activeTab, setActiveTab] = useState<Tab>('itinerary');
   const [isDarkMode, setIsDarkMode] = useState(() => {
@@ -138,6 +158,27 @@ export default function App() {
   const [activeFlightEditor, setActiveFlightEditor] = useState<FlightSegmentKey | null>(null);
   const [itineraryViewMode, setItineraryViewMode] = useState<ItineraryViewMode>('card');
   const [expandedItineraryDays, setExpandedItineraryDays] = useState<string[]>([]);
+  const [foodCategoryFilter, setFoodCategoryFilter] = useState(ALL_FILTER_LABEL);
+  const [attractionCategoryFilter, setAttractionCategoryFilter] = useState(ALL_FILTER_LABEL);
+  const [attractionConditionFilters, setAttractionConditionFilters] = useState<AttractionConditionKey[]>([]);
+
+  const foodCategoryOptions = getCategoryOptions(foodData);
+  const attractionCategoryOptions = getCategoryOptions(attractionData);
+  const filteredFoodData = foodData.filter(
+    (item) =>
+      foodCategoryFilter === ALL_FILTER_LABEL ||
+      splitTypeCategories(item.type).includes(foodCategoryFilter),
+  );
+  const filteredAttractionData = attractionData.filter((item) => {
+    const matchesCategory =
+      attractionCategoryFilter === ALL_FILTER_LABEL ||
+      splitTypeCategories(item.type).includes(attractionCategoryFilter);
+    const matchesConditions = attractionConditionFilters.every((condition) =>
+      isRecommendedForFilter(condition === 'rain' ? item.rainFriendly : item.weekendFriendly),
+    );
+
+    return matchesCategory && matchesConditions;
+  });
 
   useEffect(() => {
     if (isDarkMode) {
@@ -250,6 +291,14 @@ export default function App() {
   const toggleItineraryExpanded = (day: string) => {
     setExpandedItineraryDays((current) =>
       current.includes(day) ? current.filter((item) => item !== day) : [...current, day],
+    );
+  };
+
+  const toggleAttractionConditionFilter = (condition: AttractionConditionKey) => {
+    setAttractionConditionFilters((current) =>
+      current.includes(condition)
+        ? current.filter((item) => item !== condition)
+        : [...current, condition],
     );
   };
 
@@ -769,10 +818,34 @@ export default function App() {
                   美食指南
                 </h2>
                 <p className="text-sm text-[#8C7A6B] dark:text-[#A89F91] mt-1">名古屋必吃美食與餐廳清單</p>
+                <div className="-mx-4 mt-4 overflow-x-auto px-4 pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+                  <div className="flex min-w-max gap-2">
+                    {foodCategoryOptions.map((category) => {
+                      const isActive = foodCategoryFilter === category;
+
+                      return (
+                        <button
+                          key={category}
+                          type="button"
+                          onClick={() => setFoodCategoryFilter(category)}
+                          className={`shrink-0 whitespace-nowrap rounded-full border px-3 py-1.5 text-xs font-medium transition ${
+                            isActive
+                              ? 'border-[#D9A0A5] bg-[#D9A0A5] text-white dark:border-[#E2C07C] dark:bg-[#E2C07C] dark:text-[#362F2B]'
+                              : 'border-[#E8DCC4] bg-white text-[#8C7A6B] hover:border-[#D9A0A5] hover:text-[#6B5B4D] dark:border-[#5C4D42] dark:bg-[#362F2B] dark:text-[#A89F91] dark:hover:border-[#E2C07C] dark:hover:text-[#FDF8F5]'
+                          }`}
+                          aria-pressed={isActive}
+                        >
+                          {category}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+                <p className="mt-3 text-xs text-[#8C7A6B] dark:text-[#A89F91]">共 {filteredFoodData.length} 筆</p>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {foodData.map((item, idx) => (
+                {filteredFoodData.map((item, idx) => (
                   <div key={idx} className="bg-white dark:bg-[#362F2B] p-4 rounded-2xl shadow-sm border border-[#F0E5E1] dark:border-[#4A3F35] hover:shadow-md transition-all duration-200">
                     <div className="flex justify-between items-start mb-2">
                       <h3 className="text-base font-bold text-[#4A3F35] dark:text-[#FDF8F5] leading-tight font-serif">{item.name}</h3>
@@ -829,11 +902,62 @@ export default function App() {
                   <Map className="w-5 h-5 text-[#D9A0A5] dark:text-[#E2C07C]" />
                   景點總覽
                 </h2>
-                <p className="text-sm text-[#8C7A6B] dark:text-[#A89F91] mt-1">各景點資訊與雨天/親子友善指標</p>
+                <p className="text-sm text-[#8C7A6B] dark:text-[#A89F91] mt-1">各景點資訊與雨天、假日條件篩選</p>
+                <div className="-mx-4 mt-4 overflow-x-auto px-4 pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+                  <div className="flex min-w-max gap-2">
+                    {attractionCategoryOptions.map((category) => {
+                      const isActive = attractionCategoryFilter === category;
+
+                      return (
+                        <button
+                          key={category}
+                          type="button"
+                          onClick={() => setAttractionCategoryFilter(category)}
+                          className={`shrink-0 whitespace-nowrap rounded-full border px-3 py-1.5 text-xs font-medium transition ${
+                            isActive
+                              ? 'border-[#D9A0A5] bg-[#D9A0A5] text-white dark:border-[#E2C07C] dark:bg-[#E2C07C] dark:text-[#362F2B]'
+                              : 'border-[#E8DCC4] bg-white text-[#8C7A6B] hover:border-[#D9A0A5] hover:text-[#6B5B4D] dark:border-[#5C4D42] dark:bg-[#362F2B] dark:text-[#A89F91] dark:hover:border-[#E2C07C] dark:hover:text-[#FDF8F5]'
+                          }`}
+                          aria-pressed={isActive}
+                        >
+                          {category}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+                <div className="-mx-4 mt-3 overflow-x-auto px-4 pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+                  <div className="flex min-w-max gap-2">
+                    {(Object.entries(ATTRACTION_CONDITION_LABELS) as Array<[AttractionConditionKey, string]>).map(
+                      ([condition, label]) => {
+                        const isActive = attractionConditionFilters.includes(condition);
+
+                        return (
+                          <button
+                            key={condition}
+                            type="button"
+                            onClick={() => toggleAttractionConditionFilter(condition)}
+                            className={`shrink-0 whitespace-nowrap rounded-full border px-3 py-1.5 text-xs font-medium transition ${
+                              isActive
+                                ? 'border-[#7A907A] bg-[#7A907A] text-white dark:border-[#9EBA9E] dark:bg-[#9EBA9E] dark:text-[#2A2421]'
+                                : 'border-[#E8DCC4] bg-[#FAF5F0] text-[#8C7A6B] hover:border-[#7A907A] hover:text-[#6B5B4D] dark:border-[#5C4D42] dark:bg-[#2A2421] dark:text-[#A89F91] dark:hover:border-[#9EBA9E] dark:hover:text-[#FDF8F5]'
+                            }`}
+                            aria-pressed={isActive}
+                          >
+                            {label}
+                          </button>
+                        );
+                      },
+                    )}
+                  </div>
+                </div>
+                <p className="mt-3 text-xs text-[#8C7A6B] dark:text-[#A89F91]">
+                  共 {filteredAttractionData.length} 筆
+                </p>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {attractionData.map((item, idx) => (
+                {filteredAttractionData.map((item, idx) => (
                   <div key={idx} className="bg-white dark:bg-[#362F2B] p-4 rounded-2xl shadow-sm border border-[#F0E5E1] dark:border-[#4A3F35] hover:shadow-md transition-all duration-200">
                     <div className="flex justify-between items-start mb-2">
                       <h3 className="text-base font-bold text-[#4A3F35] dark:text-[#FDF8F5] leading-tight pr-2 font-serif">{item.name}</h3>
@@ -843,9 +967,6 @@ export default function App() {
                     </div>
 
                     <div className="flex flex-wrap gap-1.5 mb-3">
-                      <span className="inline-flex items-center gap-1 text-[10px] bg-[#FAF5F0] dark:bg-[#4A3F35]/50 border border-[#F0E5E1] dark:border-[#5C4D42] text-[#6B5B4D] dark:text-[#D1C4B5] px-1.5 py-0.5 rounded">
-                        <Users className="w-3 h-3" /> {item.familyFriendly}
-                      </span>
                       <span className="inline-flex items-center gap-1 text-[10px] bg-[#FAF5F0] dark:bg-[#4A3F35]/50 border border-[#F0E5E1] dark:border-[#5C4D42] text-[#6B5B4D] dark:text-[#D1C4B5] px-1.5 py-0.5 rounded">
                         <CloudRain className="w-3 h-3" /> {item.rainFriendly.split(' ')[0]}
                       </span>
