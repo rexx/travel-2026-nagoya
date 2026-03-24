@@ -4,16 +4,40 @@
 @variant dark (&:where(.dark, .dark *));
 
 @layer base {
+  :root {
+    --status-bar-bg: #faf5f0;
+    color-scheme: light;
+    background-color: #faf5f0;
+  }
+
+  html.dark {
+    color-scheme: dark;
+    background-color: #2a2421;
+  }
+
   html,
   body,
   #root {
     width: 100%;
     max-width: 100%;
     overflow-x: hidden;
+    background-color: inherit;
   }
 
   body {
     margin: 0;
+  }
+
+  html.standalone-app body::before {
+    content: "";
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: env(safe-area-inset-top);
+    background-color: var(--status-bar-bg);
+    pointer-events: none;
+    z-index: 70;
   }
 }
 

@@ -6,7 +6,30 @@
       name="viewport"
       content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
     />
+    <meta name="color-scheme" content="light dark" />
+    <meta name="theme-color" content="#2A2421" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <title>名古屋親子遊</title>
+    <script>
+      (() => {
+        const isDarkMode = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        const root = document.documentElement;
+        const themeColorMeta = document.querySelector('meta[name="theme-color"]');
+        const isStandalone =
+          window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+        const themeColor = isStandalone ? '#2A2421' : isDarkMode ? '#2A2421' : '#FAF5F0';
+
+        root.classList.toggle('dark', isDarkMode);
+        root.classList.toggle('standalone-app', isStandalone);
+        root.style.colorScheme = isDarkMode ? 'dark' : 'light';
+        root.style.setProperty('--status-bar-bg', themeColor);
+
+        if (themeColorMeta) {
+          themeColorMeta.setAttribute('content', themeColor);
+        }
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>

@@ -16,6 +16,14 @@ const ATTRACTION_CONDITION_LABELS: Record<AttractionConditionKey, string> = {
   rain: '適合雨天',
   weekend: '適合假日',
 };
+const THEME_COLORS = {
+  light: '#FAF5F0',
+  dark: '#2A2421',
+} as const;
+const isStandaloneWebApp = (): boolean => {
+  const navigatorWithStandalone = window.navigator as Navigator & { standalone?: boolean };
+  return window.matchMedia('(display-mode: standalone)').matches || navigatorWithStandalone.standalone === true;
+};
 const FLIGHT_SEGMENT_LABELS = {
   arrival: '去程',
   departure: '回程',
@@ -181,11 +189,23 @@ export default function App() {
   });
 
   useEffect(() => {
+    const isStandalone = isStandaloneWebApp();
+    const surfaceColor = isDarkMode ? THEME_COLORS.dark : THEME_COLORS.light;
+    const themeColor = isStandalone ? THEME_COLORS.dark : surfaceColor;
+
     if (isDarkMode) {
       document.documentElement.classList.add('dark');
     } else {
       document.documentElement.classList.remove('dark');
     }
+
+    document.documentElement.classList.toggle('standalone-app', isStandalone);
+    document.documentElement.style.colorScheme = isDarkMode ? 'dark' : 'light';
+    document.documentElement.style.setProperty('--status-bar-bg', themeColor);
+    document.body.style.backgroundColor = surfaceColor;
+
+    const themeColorMeta = document.querySelector('meta[name="theme-color"]');
+    themeColorMeta?.setAttribute('content', themeColor);
   }, [isDarkMode]);
 
   useEffect(() => {
