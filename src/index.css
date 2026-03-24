@@ -45,6 +45,34 @@
   .pb-safe {
     padding-bottom: env(safe-area-inset-bottom);
   }
+
+  .flight-datetime-input {
+    box-sizing: border-box;
+    inline-size: 100%;
+    min-inline-size: 0;
+    max-inline-size: 100%;
+    display: block;
+    appearance: none;
+    -webkit-appearance: none;
+    font: inherit;
+  }
+
+  .flight-datetime-input::-webkit-date-and-time-value {
+    min-inline-size: 0;
+  }
+
+  .flight-datetime-input::-webkit-datetime-edit {
+    min-inline-size: 0;
+    padding: 0;
+  }
+
+  .flight-datetime-input::-webkit-calendar-picker-indicator {
+    margin: 0;
+  }
+
+  .flight-datetime-input::-webkit-datetime-edit-fields-wrapper {
+    min-inline-size: 0;
+  }
 }
 
 @theme {

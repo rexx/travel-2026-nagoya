@@ -28,6 +28,14 @@ const FLIGHT_SEGMENT_LABELS = {
   arrival: '去程',
   departure: '回程',
 } as const;
+const flightInputClassName =
+  'w-full min-w-0 max-w-full rounded-xl border border-[#E8DCC4] bg-white px-3 py-2 text-sm text-[#4A3F35] outline-none transition focus:border-[#D9A0A5] focus:ring-2 focus:ring-[#D9A0A5]/20 dark:border-[#5C4D42] dark:bg-[#362F2B] dark:text-[#FDF8F5] dark:focus:border-[#9EBA9E] dark:focus:ring-[#9EBA9E]/20';
+const flightTextInputClassName =
+  `${flightInputClassName} dark:placeholder:text-[#8C7A6B]`;
+const flightDateTimeFieldClassName =
+  'flex min-w-0 max-w-full items-center rounded-xl border border-[#E8DCC4] bg-white px-3 py-2 transition focus-within:border-[#D9A0A5] focus-within:ring-2 focus-within:ring-[#D9A0A5]/20 dark:border-[#5C4D42] dark:bg-[#362F2B] dark:focus-within:border-[#9EBA9E] dark:focus-within:ring-[#9EBA9E]/20';
+const flightDateTimeInputClassName =
+  'flight-datetime-input min-w-0 w-full max-w-full border-0 bg-transparent p-0 text-sm text-[#4A3F35] outline-none dark:text-[#FDF8F5]';
 
 type FlightSegmentKey = keyof typeof FLIGHT_SEGMENT_LABELS;
 
@@ -493,54 +501,58 @@ export default function App() {
                     value={flightInfoDraft[flightSegmentKey].airline}
                     onChange={(event) => updateFlightDraft(flightSegmentKey, 'airline', event.target.value)}
                     placeholder="航空公司"
-                    className="w-full rounded-xl border border-[#E8DCC4] bg-white px-3 py-2 text-sm text-[#4A3F35] outline-none transition focus:border-[#D9A0A5] focus:ring-2 focus:ring-[#D9A0A5]/20 dark:border-[#5C4D42] dark:bg-[#362F2B] dark:text-[#FDF8F5] dark:placeholder:text-[#8C7A6B] dark:focus:border-[#9EBA9E] dark:focus:ring-[#9EBA9E]/20"
+                    className={flightTextInputClassName}
                   />
                   <input
                     type="text"
                     value={flightInfoDraft[flightSegmentKey].flightNumber}
                     onChange={(event) => updateFlightDraft(flightSegmentKey, 'flightNumber', event.target.value)}
                     placeholder="航班編號"
-                    className="w-full rounded-xl border border-[#E8DCC4] bg-white px-3 py-2 text-sm text-[#4A3F35] outline-none transition focus:border-[#D9A0A5] focus:ring-2 focus:ring-[#D9A0A5]/20 dark:border-[#5C4D42] dark:bg-[#362F2B] dark:text-[#FDF8F5] dark:placeholder:text-[#8C7A6B] dark:focus:border-[#9EBA9E] dark:focus:ring-[#9EBA9E]/20"
+                    className={flightTextInputClassName}
                   />
                   <input
                     type="text"
                     value={flightInfoDraft[flightSegmentKey].departureAirport}
                     onChange={(event) => updateFlightDraft(flightSegmentKey, 'departureAirport', event.target.value)}
                     placeholder="出發機場"
-                    className="w-full rounded-xl border border-[#E8DCC4] bg-white px-3 py-2 text-sm text-[#4A3F35] outline-none transition focus:border-[#D9A0A5] focus:ring-2 focus:ring-[#D9A0A5]/20 dark:border-[#5C4D42] dark:bg-[#362F2B] dark:text-[#FDF8F5] dark:placeholder:text-[#8C7A6B] dark:focus:border-[#9EBA9E] dark:focus:ring-[#9EBA9E]/20"
+                    className={flightTextInputClassName}
                   />
                   <input
                     type="text"
                     value={flightInfoDraft[flightSegmentKey].arrivalAirport}
                     onChange={(event) => updateFlightDraft(flightSegmentKey, 'arrivalAirport', event.target.value)}
                     placeholder="抵達機場"
-                    className="w-full rounded-xl border border-[#E8DCC4] bg-white px-3 py-2 text-sm text-[#4A3F35] outline-none transition focus:border-[#D9A0A5] focus:ring-2 focus:ring-[#D9A0A5]/20 dark:border-[#5C4D42] dark:bg-[#362F2B] dark:text-[#FDF8F5] dark:placeholder:text-[#8C7A6B] dark:focus:border-[#9EBA9E] dark:focus:ring-[#9EBA9E]/20"
+                    className={flightTextInputClassName}
                   />
-                  <input
-                    type="datetime-local"
-                    value={flightInfoDraft[flightSegmentKey].departureTime}
-                    onChange={(event) => updateFlightDraft(flightSegmentKey, 'departureTime', event.target.value)}
-                    className="w-full rounded-xl border border-[#E8DCC4] bg-white px-3 py-2 text-sm text-[#4A3F35] outline-none transition focus:border-[#D9A0A5] focus:ring-2 focus:ring-[#D9A0A5]/20 dark:border-[#5C4D42] dark:bg-[#362F2B] dark:text-[#FDF8F5] dark:focus:border-[#9EBA9E] dark:focus:ring-[#9EBA9E]/20"
-                  />
-                  <input
-                    type="datetime-local"
-                    value={flightInfoDraft[flightSegmentKey].arrivalTime}
-                    onChange={(event) => updateFlightDraft(flightSegmentKey, 'arrivalTime', event.target.value)}
-                    className="w-full rounded-xl border border-[#E8DCC4] bg-white px-3 py-2 text-sm text-[#4A3F35] outline-none transition focus:border-[#D9A0A5] focus:ring-2 focus:ring-[#D9A0A5]/20 dark:border-[#5C4D42] dark:bg-[#362F2B] dark:text-[#FDF8F5] dark:focus:border-[#9EBA9E] dark:focus:ring-[#9EBA9E]/20"
-                  />
+                  <div className={flightDateTimeFieldClassName}>
+                    <input
+                      type="datetime-local"
+                      value={flightInfoDraft[flightSegmentKey].departureTime}
+                      onChange={(event) => updateFlightDraft(flightSegmentKey, 'departureTime', event.target.value)}
+                      className={flightDateTimeInputClassName}
+                    />
+                  </div>
+                  <div className={flightDateTimeFieldClassName}>
+                    <input
+                      type="datetime-local"
+                      value={flightInfoDraft[flightSegmentKey].arrivalTime}
+                      onChange={(event) => updateFlightDraft(flightSegmentKey, 'arrivalTime', event.target.value)}
+                      className={flightDateTimeInputClassName}
+                    />
+                  </div>
                   <input
                     type="text"
                     value={flightInfoDraft[flightSegmentKey].terminal}
                     onChange={(event) => updateFlightDraft(flightSegmentKey, 'terminal', event.target.value)}
                     placeholder="航廈 / 櫃位備註"
-                    className="w-full rounded-xl border border-[#E8DCC4] bg-white px-3 py-2 text-sm text-[#4A3F35] outline-none transition focus:border-[#D9A0A5] focus:ring-2 focus:ring-[#D9A0A5]/20 dark:border-[#5C4D42] dark:bg-[#362F2B] dark:text-[#FDF8F5] dark:placeholder:text-[#8C7A6B] dark:focus:border-[#9EBA9E] dark:focus:ring-[#9EBA9E]/20 sm:col-span-2"
+                    className={`${flightTextInputClassName} sm:col-span-2`}
                   />
                   <textarea
                     value={flightInfoDraft[flightSegmentKey].note}
                     onChange={(event) => updateFlightDraft(flightSegmentKey, 'note', event.target.value)}
                     placeholder="備註"
                     rows={2}
-                    className="w-full rounded-xl border border-[#E8DCC4] bg-white px-3 py-2 text-sm text-[#4A3F35] outline-none transition focus:border-[#D9A0A5] focus:ring-2 focus:ring-[#D9A0A5]/20 dark:border-[#5C4D42] dark:bg-[#362F2B] dark:text-[#FDF8F5] dark:placeholder:text-[#8C7A6B] dark:focus:border-[#9EBA9E] dark:focus:ring-[#9EBA9E]/20 sm:col-span-2"
+                    className={`${flightTextInputClassName} sm:col-span-2`}
                   />
                 </div>
               </div>
@@ -683,54 +695,58 @@ export default function App() {
                       value={flightInfoDraft[flightSegmentKey].airline}
                       onChange={(event) => updateFlightDraft(flightSegmentKey, 'airline', event.target.value)}
                       placeholder="航空公司"
-                      className="w-full rounded-xl border border-[#E8DCC4] bg-white px-3 py-2 text-sm text-[#4A3F35] outline-none transition focus:border-[#D9A0A5] focus:ring-2 focus:ring-[#D9A0A5]/20 dark:border-[#5C4D42] dark:bg-[#362F2B] dark:text-[#FDF8F5] dark:placeholder:text-[#8C7A6B] dark:focus:border-[#9EBA9E] dark:focus:ring-[#9EBA9E]/20"
+                      className={flightTextInputClassName}
                     />
                     <input
                       type="text"
                       value={flightInfoDraft[flightSegmentKey].flightNumber}
                       onChange={(event) => updateFlightDraft(flightSegmentKey, 'flightNumber', event.target.value)}
                       placeholder="航班編號"
-                      className="w-full rounded-xl border border-[#E8DCC4] bg-white px-3 py-2 text-sm text-[#4A3F35] outline-none transition focus:border-[#D9A0A5] focus:ring-2 focus:ring-[#D9A0A5]/20 dark:border-[#5C4D42] dark:bg-[#362F2B] dark:text-[#FDF8F5] dark:placeholder:text-[#8C7A6B] dark:focus:border-[#9EBA9E] dark:focus:ring-[#9EBA9E]/20"
+                      className={flightTextInputClassName}
                     />
                     <input
                       type="text"
                       value={flightInfoDraft[flightSegmentKey].departureAirport}
                       onChange={(event) => updateFlightDraft(flightSegmentKey, 'departureAirport', event.target.value)}
                       placeholder="出發機場"
-                      className="w-full rounded-xl border border-[#E8DCC4] bg-white px-3 py-2 text-sm text-[#4A3F35] outline-none transition focus:border-[#D9A0A5] focus:ring-2 focus:ring-[#D9A0A5]/20 dark:border-[#5C4D42] dark:bg-[#362F2B] dark:text-[#FDF8F5] dark:placeholder:text-[#8C7A6B] dark:focus:border-[#9EBA9E] dark:focus:ring-[#9EBA9E]/20"
+                      className={flightTextInputClassName}
                     />
                     <input
                       type="text"
                       value={flightInfoDraft[flightSegmentKey].arrivalAirport}
                       onChange={(event) => updateFlightDraft(flightSegmentKey, 'arrivalAirport', event.target.value)}
                       placeholder="抵達機場"
-                      className="w-full rounded-xl border border-[#E8DCC4] bg-white px-3 py-2 text-sm text-[#4A3F35] outline-none transition focus:border-[#D9A0A5] focus:ring-2 focus:ring-[#D9A0A5]/20 dark:border-[#5C4D42] dark:bg-[#362F2B] dark:text-[#FDF8F5] dark:placeholder:text-[#8C7A6B] dark:focus:border-[#9EBA9E] dark:focus:ring-[#9EBA9E]/20"
+                      className={flightTextInputClassName}
                     />
-                    <input
-                      type="datetime-local"
-                      value={flightInfoDraft[flightSegmentKey].departureTime}
-                      onChange={(event) => updateFlightDraft(flightSegmentKey, 'departureTime', event.target.value)}
-                      className="w-full rounded-xl border border-[#E8DCC4] bg-white px-3 py-2 text-sm text-[#4A3F35] outline-none transition focus:border-[#D9A0A5] focus:ring-2 focus:ring-[#D9A0A5]/20 dark:border-[#5C4D42] dark:bg-[#362F2B] dark:text-[#FDF8F5] dark:focus:border-[#9EBA9E] dark:focus:ring-[#9EBA9E]/20"
-                    />
-                    <input
-                      type="datetime-local"
-                      value={flightInfoDraft[flightSegmentKey].arrivalTime}
-                      onChange={(event) => updateFlightDraft(flightSegmentKey, 'arrivalTime', event.target.value)}
-                      className="w-full rounded-xl border border-[#E8DCC4] bg-white px-3 py-2 text-sm text-[#4A3F35] outline-none transition focus:border-[#D9A0A5] focus:ring-2 focus:ring-[#D9A0A5]/20 dark:border-[#5C4D42] dark:bg-[#362F2B] dark:text-[#FDF8F5] dark:focus:border-[#9EBA9E] dark:focus:ring-[#9EBA9E]/20"
-                    />
+                    <div className={flightDateTimeFieldClassName}>
+                      <input
+                        type="datetime-local"
+                        value={flightInfoDraft[flightSegmentKey].departureTime}
+                        onChange={(event) => updateFlightDraft(flightSegmentKey, 'departureTime', event.target.value)}
+                        className={flightDateTimeInputClassName}
+                      />
+                    </div>
+                    <div className={flightDateTimeFieldClassName}>
+                      <input
+                        type="datetime-local"
+                        value={flightInfoDraft[flightSegmentKey].arrivalTime}
+                        onChange={(event) => updateFlightDraft(flightSegmentKey, 'arrivalTime', event.target.value)}
+                        className={flightDateTimeInputClassName}
+                      />
+                    </div>
                     <input
                       type="text"
                       value={flightInfoDraft[flightSegmentKey].terminal}
                       onChange={(event) => updateFlightDraft(flightSegmentKey, 'terminal', event.target.value)}
                       placeholder="航廈 / 櫃位備註"
-                      className="w-full rounded-xl border border-[#E8DCC4] bg-white px-3 py-2 text-sm text-[#4A3F35] outline-none transition focus:border-[#D9A0A5] focus:ring-2 focus:ring-[#D9A0A5]/20 dark:border-[#5C4D42] dark:bg-[#362F2B] dark:text-[#FDF8F5] dark:placeholder:text-[#8C7A6B] dark:focus:border-[#9EBA9E] dark:focus:ring-[#9EBA9E]/20 sm:col-span-2"
+                      className={`${flightTextInputClassName} sm:col-span-2`}
                     />
                     <textarea
                       value={flightInfoDraft[flightSegmentKey].note}
                       onChange={(event) => updateFlightDraft(flightSegmentKey, 'note', event.target.value)}
                       placeholder="備註"
                       rows={2}
-                      className="w-full rounded-xl border border-[#E8DCC4] bg-white px-3 py-2 text-sm text-[#4A3F35] outline-none transition focus:border-[#D9A0A5] focus:ring-2 focus:ring-[#D9A0A5]/20 dark:border-[#5C4D42] dark:bg-[#362F2B] dark:text-[#FDF8F5] dark:placeholder:text-[#8C7A6B] dark:focus:border-[#9EBA9E] dark:focus:ring-[#9EBA9E]/20 sm:col-span-2"
+                      className={`${flightTextInputClassName} sm:col-span-2`}
                     />
                   </div>
                 </div>
