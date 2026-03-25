@@ -14,6 +14,7 @@ export interface FoodItem {
   type: string;
   location: string;
   mapQuery: string;
+  mapCenter?: string;
   suggestedDay: string;
   hours: string;
   reservation: string;
@@ -26,6 +27,7 @@ export interface AttractionItem {
   type: string;
   location: string;
   mapQuery: string;
+  mapCenter?: string;
   transport: string;
   hours: string;
   cost: string;

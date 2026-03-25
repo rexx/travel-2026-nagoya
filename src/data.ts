@@ -1,6 +1,6 @@
 import { AttractionItem, FoodItem, ItineraryItem, CreditCardItem, PromoItem, EPayItem } from './types';
 
-const DEFAULT_FOOD_MAP_QUERY = '35.1711148,136.9094757';
+const NAGOYA_STATION_MAP_CENTER = '35.170915,136.881537';
 
 export const itineraryData: ItineraryItem[] = [
   { day: 'Day 1', date: '4/15', weekday: '三', hotel: '機場飯店', theme: '✈️ 抵達', schedule: '晚抵中部國際機場 → 機場飯店check-in → 超商或機場簡單晚餐', rainBackup: '—', status: '✅ 已訂' },
@@ -18,22 +18,22 @@ export const itineraryData: ItineraryItem[] = [
 ];
 
 export const foodData: FoodItem[] = [
-  { name: '艾許奶油泡芙（ÉCLAIR / エシレ）', type: '甜點・早餐', location: '名古屋站', mapQuery: DEFAULT_FOOD_MAP_QUERY, suggestedDay: 'Day2–Day6 任一早晨出發前', hours: '約09:00開賣', reservation: '❌ 現場排隊', price: '¥400–600/個', notes: '必買！開賣就要去排，假日排隊更長' },
-  { name: 'KONPARU 炸蝦三明治', type: '早餐', location: '名古屋站', mapQuery: DEFAULT_FOOD_MAP_QUERY, suggestedDay: 'Day2–Day6 任一早晨', hours: '07:00起', reservation: '❌', price: '¥500左右', notes: '名古屋站老牌早餐名店' },
-  { name: '天むす緋毬（天婦羅飯糰）', type: '早餐・輕食', location: '名古屋站附近', mapQuery: DEFAULT_FOOD_MAP_QUERY, suggestedDay: 'Day2–Day6 任一早晨', hours: '09:00起', reservation: '❌', price: '¥800左右', notes: '名古屋名物天婦羅飯糰' },
-  { name: '名古 onimaru 飯糰', type: '早餐', location: '名古屋站', mapQuery: DEFAULT_FOOD_MAP_QUERY, suggestedDay: 'Day2–Day6 任一早晨', hours: '07:00起', reservation: '❌', price: '¥200–400/個', notes: '在地人氣早餐飯糰' },
-  { name: '名古屋港水族館周邊餐廳', type: '午餐', location: '名古屋港附近', mapQuery: DEFAULT_FOOD_MAP_QUERY, suggestedDay: '視行程安排（若有排水族館）', hours: '11:00–14:00', reservation: '建議平日不用', price: '¥1000–1500', notes: '港區有多家家庭餐廳可選' },
-  { name: '吉卜力公園園區內餐廳', type: '午餐', location: '愛知縣長久手市（吉卜力公園內）', mapQuery: DEFAULT_FOOD_MAP_QUERY, suggestedDay: 'Day 9（4/23）', hours: '10:00–17:00（視各店）', reservation: '⚠️ 建議提前看官網', price: '¥1200–2000', notes: '園區內選擇有限，建議早點用餐避開人潮' },
-  { name: '矢場とん（矢場豬排）', type: '晚餐・名古屋名物', location: '榮／矢場町', mapQuery: DEFAULT_FOOD_MAP_QUERY, suggestedDay: 'Day8（4/22）或Day10（4/24）', hours: '11:00–21:00', reservation: '⚠️ 假日排隊，建議平日或提早', price: '¥1500–2500', notes: '名古屋味噌豬排最代表性老店，必吃' },
-  { name: '風來坊（手羽先）', type: '晚餐・宵夜', location: '名古屋市各處', mapQuery: DEFAULT_FOOD_MAP_QUERY, suggestedDay: 'Day10（4/24）大須美食日', hours: '17:00–23:00左右', reservation: '❌ 不需要', price: '¥1500–2000', notes: '名古屋手羽先兩大名店之一' },
-  { name: '世界山將（手羽先）', type: '晚餐・宵夜', location: '榮附近', mapQuery: DEFAULT_FOOD_MAP_QUERY, suggestedDay: 'Day8（4/22）或Day10（4/24）', hours: '17:00–23:00', reservation: '❌ 不需要', price: '¥1500–2000', notes: '名古屋手羽先兩大名店之一，和風來坊各有擁護者' },
-  { name: '飛驒牛一頭家 馬喰一代', type: '晚餐・燒肉', location: '名古屋站附近', mapQuery: DEFAULT_FOOD_MAP_QUERY, suggestedDay: 'Day9（4/23）吉卜力回來後', hours: '17:00–22:00', reservation: '✅ 強烈建議提前訂位', price: '¥5000–8000/人', notes: '飛驒牛一頭買入直接提供，品質極高，非常熱門' },
-  { name: '札幌螃蟹本家', type: '晚餐', location: '榮商圈', mapQuery: DEFAULT_FOOD_MAP_QUERY, suggestedDay: 'Day8（4/22）或Day10（4/24）', hours: '11:00–22:00', reservation: '⚠️ 建議預約', price: '¥5000–10000/人', notes: '螃蟹料理名店，榮住宿期間很方便' },
-  { name: '麵家獅子丸', type: '晚餐・拉麵', location: '名古屋站附近', mapQuery: DEFAULT_FOOD_MAP_QUERY, suggestedDay: 'Day7（4/21）樂高結束後', hours: '11:00–22:00', reservation: '❌', price: '¥900–1200', notes: '名古屋台灣拉麵系統，辣味特色' },
-  { name: 'HARBS', type: '甜點・下午茶', location: '榮商圈', mapQuery: DEFAULT_FOOD_MAP_QUERY, suggestedDay: 'Day8（4/22）榮購物日', hours: '11:00–20:00', reservation: '⚠️ 假日排隊長', price: '¥1000–1500', notes: '水果千層蛋糕名店，榮店位置很方便' },
-  { name: 'Piyorin 小雞蛋糕', type: '甜點・伴手禮', location: '名古屋站（JR名古屋高島屋B1）', mapQuery: DEFAULT_FOOD_MAP_QUERY, suggestedDay: 'Day11（4/25）出發機場前', hours: '依百貨時間', reservation: '❌ 現場購買', price: '¥500–700/個', notes: '名古屋站限定必買！黃色小雞造型超可愛，賣完就沒了要早去' },
-  { name: 'えびせんべいの里（蝦餅）', type: '伴手禮', location: '名古屋站或機場', mapQuery: DEFAULT_FOOD_MAP_QUERY, suggestedDay: 'Day11（4/25）採買日', hours: '依店面', reservation: '❌', price: '¥1000–2000/盒', notes: '名古屋知名伴手禮，蝦餅系列多種口味' },
-  { name: '機場鰻魚飯', type: '午餐・機場美食', location: '中部國際機場（Centrair）', mapQuery: DEFAULT_FOOD_MAP_QUERY, suggestedDay: 'Day12（4/26）返台當天', hours: '機場營業時間', reservation: '❌', price: '¥2000–3500', notes: '離開前最後一餐，機場內有多家鰻魚飯店' }
+  { name: '艾許奶油泡芙（ÉCLAIR / エシレ）', type: '甜點・早餐', location: '名古屋站', mapQuery: 'エシレ', mapCenter: NAGOYA_STATION_MAP_CENTER, suggestedDay: 'Day2–Day6 任一早晨出發前', hours: '約09:00開賣', reservation: '❌ 現場排隊', price: '¥400–600/個', notes: '必買！開賣就要去排，假日排隊更長' },
+  { name: 'KONPARU 炸蝦三明治', type: '早餐', location: '名古屋站', mapQuery: 'KONPARU', mapCenter: NAGOYA_STATION_MAP_CENTER, suggestedDay: 'Day2–Day6 任一早晨', hours: '07:00起', reservation: '❌', price: '¥500左右', notes: '名古屋站老牌早餐名店' },
+  { name: '天むす緋毬（天婦羅飯糰）', type: '早餐・輕食', location: '名古屋站附近', mapQuery: '天むす緋毬', mapCenter: NAGOYA_STATION_MAP_CENTER, suggestedDay: 'Day2–Day6 任一早晨', hours: '09:00起', reservation: '❌', price: '¥800左右', notes: '名古屋名物天婦羅飯糰' },
+  { name: '名古 onimaru 飯糰', type: '早餐', location: '名古屋站', mapQuery: 'onimaru', mapCenter: NAGOYA_STATION_MAP_CENTER, suggestedDay: 'Day2–Day6 任一早晨', hours: '07:00起', reservation: '❌', price: '¥200–400/個', notes: '在地人氣早餐飯糰' },
+  { name: '名古屋港水族館周邊餐廳', type: '午餐', location: '名古屋港附近', mapQuery: '名古屋港水族館 餐廳', mapCenter: NAGOYA_STATION_MAP_CENTER, suggestedDay: '視行程安排（若有排水族館）', hours: '11:00–14:00', reservation: '建議平日不用', price: '¥1000–1500', notes: '港區有多家家庭餐廳可選' },
+  { name: '吉卜力公園園區內餐廳', type: '午餐', location: '愛知縣長久手市（吉卜力公園內）', mapQuery: '吉卜力公園 餐廳', mapCenter: NAGOYA_STATION_MAP_CENTER, suggestedDay: 'Day 9（4/23）', hours: '10:00–17:00（視各店）', reservation: '⚠️ 建議提前看官網', price: '¥1200–2000', notes: '園區內選擇有限，建議早點用餐避開人潮' },
+  { name: '矢場とん（矢場豬排）', type: '晚餐・名古屋名物', location: '榮／矢場町', mapQuery: '矢場とん', mapCenter: NAGOYA_STATION_MAP_CENTER, suggestedDay: 'Day8（4/22）或Day10（4/24）', hours: '11:00–21:00', reservation: '⚠️ 假日排隊，建議平日或提早', price: '¥1500–2500', notes: '名古屋味噌豬排最代表性老店，必吃' },
+  { name: '風來坊（手羽先）', type: '晚餐・宵夜', location: '名古屋市各處', mapQuery: '風来坊', mapCenter: NAGOYA_STATION_MAP_CENTER, suggestedDay: 'Day10（4/24）大須美食日', hours: '17:00–23:00左右', reservation: '❌ 不需要', price: '¥1500–2000', notes: '名古屋手羽先兩大名店之一' },
+  { name: '世界山將（手羽先）', type: '晚餐・宵夜', location: '榮附近', mapQuery: '世界の山ちゃん', mapCenter: NAGOYA_STATION_MAP_CENTER, suggestedDay: 'Day8（4/22）或Day10（4/24）', hours: '17:00–23:00', reservation: '❌ 不需要', price: '¥1500–2000', notes: '名古屋手羽先兩大名店之一，和風來坊各有擁護者' },
+  { name: '飛驒牛一頭家 馬喰一代', type: '晚餐・燒肉', location: '名古屋站附近', mapQuery: '馬喰一代', mapCenter: NAGOYA_STATION_MAP_CENTER, suggestedDay: 'Day9（4/23）吉卜力回來後', hours: '17:00–22:00', reservation: '✅ 強烈建議提前訂位', price: '¥5000–8000/人', notes: '飛驒牛一頭買入直接提供，品質極高，非常熱門' },
+  { name: '札幌螃蟹本家', type: '晚餐', location: '榮商圈', mapQuery: '札幌かに本家', mapCenter: NAGOYA_STATION_MAP_CENTER, suggestedDay: 'Day8（4/22）或Day10（4/24）', hours: '11:00–22:00', reservation: '⚠️ 建議預約', price: '¥5000–10000/人', notes: '螃蟹料理名店，榮住宿期間很方便' },
+  { name: '麵家獅子丸', type: '晚餐・拉麵', location: '名古屋站附近', mapQuery: '麺家獅子丸', mapCenter: NAGOYA_STATION_MAP_CENTER, suggestedDay: 'Day7（4/21）樂高結束後', hours: '11:00–22:00', reservation: '❌', price: '¥900–1200', notes: '名古屋台灣拉麵系統，辣味特色' },
+  { name: 'HARBS', type: '甜點・下午茶', location: '榮商圈', mapQuery: 'HARBS', mapCenter: NAGOYA_STATION_MAP_CENTER, suggestedDay: 'Day8（4/22）榮購物日', hours: '11:00–20:00', reservation: '⚠️ 假日排隊長', price: '¥1000–1500', notes: '水果千層蛋糕名店，榮店位置很方便' },
+  { name: 'Piyorin 小雞蛋糕', type: '甜點・伴手禮', location: '名古屋站（JR名古屋高島屋B1）', mapQuery: 'ぴよりん', mapCenter: NAGOYA_STATION_MAP_CENTER, suggestedDay: 'Day11（4/25）出發機場前', hours: '依百貨時間', reservation: '❌ 現場購買', price: '¥500–700/個', notes: '名古屋站限定必買！黃色小雞造型超可愛，賣完就沒了要早去' },
+  { name: 'えびせんべいの里（蝦餅）', type: '伴手禮', location: '名古屋站或機場', mapQuery: 'えびせんべいの里', mapCenter: NAGOYA_STATION_MAP_CENTER, suggestedDay: 'Day11（4/25）採買日', hours: '依店面', reservation: '❌', price: '¥1000–2000/盒', notes: '名古屋知名伴手禮，蝦餅系列多種口味' },
+  { name: '機場鰻魚飯', type: '午餐・機場美食', location: '中部國際機場（Centrair）', mapQuery: '中部国際空港 うなぎ', mapCenter: NAGOYA_STATION_MAP_CENTER, suggestedDay: 'Day12（4/26）返台當天', hours: '機場營業時間', reservation: '❌', price: '¥2000–3500', notes: '離開前最後一餐，機場內有多家鰻魚飯店' }
 ];
 
 export const attractionData: AttractionItem[] = [

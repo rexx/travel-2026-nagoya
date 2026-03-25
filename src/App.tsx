@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { CalendarDays, UtensilsCrossed, Map, MapPin, Clock, Banknote, Info, Pencil, CloudRain, AlertCircle, CheckCircle2, BedDouble, Sun, Moon, CreditCard, Smartphone, MapPinned, Settings2, X, PlaneTakeoff, PlaneLanding, Trash2, Save, LayoutGrid, List, ChevronDown, ChevronUp, WifiOff, ExternalLink } from 'lucide-react';
+import { CalendarDays, UtensilsCrossed, Map, MapPin, Clock, Banknote, Info, Pencil, CloudRain, AlertCircle, CheckCircle2, BedDouble, Sun, Moon, CreditCard, Smartphone, MapPinned, Settings2, X, PlaneTakeoff, PlaneLanding, Trash2, Save, LayoutGrid, List, ChevronDown, ChevronUp, WifiOff, ExternalLink, ArrowLeft } from 'lucide-react';
 import { itineraryData, foodData, attractionData, creditCardData, promoData, ePayData } from './data';
 import { motion, AnimatePresence } from 'motion/react';
 import { AttractionItem, FoodItem, ItineraryItem } from './types';
@@ -59,6 +59,7 @@ interface FlightInfo {
 interface MapTarget {
   label: string;
   mapQuery: string;
+  mapCenter?: string;
 }
 type ItineraryNotes = Record<string, string>;
 
@@ -180,24 +181,36 @@ const getCategoryOptions = (items: Array<{ type: string }>): string[] => [
 
 const isRecommendedForFilter = (value: string): boolean => value.includes('✅');
 
-const buildGoogleMapsEmbedUrl = (query: string): string => {
+const buildGoogleMapsEmbedUrl = (query: string, center?: string): string => {
   const trimmedQuery = query.trim();
 
   if (!trimmedQuery) {
     return '';
   }
 
-  return `https://www.google.com/maps?q=${encodeURIComponent(trimmedQuery)}&z=15&output=embed`;
+  const trimmedCenter = center?.trim();
+
+  if (!trimmedCenter) {
+    return `https://www.google.com/maps?q=${encodeURIComponent(trimmedQuery)}&z=15&output=embed`;
+  }
+
+  return `https://www.google.com/maps?q=${encodeURIComponent(trimmedQuery)}&ll=${encodeURIComponent(trimmedCenter)}&z=13&output=embed`;
 };
 
-const buildGoogleMapsExternalUrl = (query: string): string => {
+const buildGoogleMapsExternalUrl = (query: string, center?: string): string => {
   const trimmedQuery = query.trim();
 
   if (!trimmedQuery) {
     return '';
   }
 
-  return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(trimmedQuery)}`;
+  const trimmedCenter = center?.trim();
+
+  if (!trimmedCenter) {
+    return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(trimmedQuery)}`;
+  }
+
+  return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(trimmedQuery)}&center=${encodeURIComponent(trimmedCenter)}`;
 };
 
 export default function App() {
@@ -262,8 +275,12 @@ export default function App() {
 
     return matchesCategory && matchesConditions;
   });
-  const selectedMapUrl = selectedMapTarget ? buildGoogleMapsEmbedUrl(selectedMapTarget.mapQuery) : '';
-  const selectedMapExternalUrl = selectedMapTarget ? buildGoogleMapsExternalUrl(selectedMapTarget.mapQuery) : '';
+  const selectedMapUrl = selectedMapTarget
+    ? buildGoogleMapsEmbedUrl(selectedMapTarget.mapQuery, selectedMapTarget.mapCenter)
+    : '';
+  const selectedMapExternalUrl = selectedMapTarget
+    ? buildGoogleMapsExternalUrl(selectedMapTarget.mapQuery, selectedMapTarget.mapCenter)
+    : '';
   const displayedMapUrl = selectedMapUrl || mapEmbedUrl.trim();
   const canRenderMapIframe = !isOffline && Boolean(displayedMapUrl);
 
@@ -486,6 +503,7 @@ export default function App() {
     setSelectedMapTarget({
       label: item.name,
       mapQuery: item.mapQuery,
+      mapCenter: item.mapCenter,
     });
     setIsMapSettingsOpen(false);
     setActiveTab('map');
@@ -1394,36 +1412,27 @@ export default function App() {
               className="h-full flex flex-col bg-[#FAF5F0] dark:bg-[#2A2421]"
             >
               <div className="relative flex-1 overflow-hidden">
-                <div className="pointer-events-none absolute inset-x-0 top-0 z-20 flex items-start justify-between gap-3 px-4 pt-16">
-                  <div className="pointer-events-auto flex max-w-[min(18rem,calc(100vw-7rem))] flex-col gap-2">
-                    {selectedMapTarget && (
-                      <div className="rounded-2xl border border-white/70 bg-white/90 px-4 py-3 shadow-lg backdrop-blur-sm dark:border-[#5C4D42]/80 dark:bg-[#2A2421]/90">
-                        <p className="text-xs font-medium uppercase tracking-[0.18em] text-[#8C7A6B] dark:text-[#A89F91]">
-                          目前定位
-                        </p>
-                        <p className="mt-1 text-sm font-semibold text-[#4A3F35] dark:text-[#FDF8F5]">
-                          {selectedMapTarget.label}
-                        </p>
-                        <button
-                          type="button"
-                          onClick={clearSelectedMapTarget}
-                          className="mt-3 inline-flex items-center rounded-full border border-[#E8DCC4] bg-[#FAF5F0] px-3 py-1.5 text-xs font-medium text-[#6B5B4D] transition hover:border-[#D9A0A5] hover:text-[#D9A0A5] dark:border-[#5C4D42] dark:bg-[#362F2B] dark:text-[#D1C4B5] dark:hover:border-[#E2C07C] dark:hover:text-[#E2C07C]"
-                        >
-                          回到總覽地圖
-                        </button>
-                      </div>
-                    )}
-                  </div>
+                <div className="pointer-events-none absolute inset-x-0 top-0 z-20 flex justify-end px-4 pt-16">
                   <div className="pointer-events-auto flex flex-col items-end gap-3">
                     <button
                       type="button"
                       onClick={() => setIsMapSettingsOpen((current) => !current)}
-                      className="inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-white/60 bg-white/90 text-[#6B5B4D] shadow-lg backdrop-blur-sm transition hover:border-[#D9A0A5] hover:text-[#D9A0A5] dark:border-[#5C4D42]/80 dark:bg-[#2A2421]/90 dark:text-[#D1C4B5] dark:hover:border-[#9EBA9E] dark:hover:text-[#9EBA9E]"
+                      className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-white/60 bg-white/90 text-[#6B5B4D] shadow-lg backdrop-blur-sm transition hover:border-[#D9A0A5] hover:text-[#D9A0A5] dark:border-[#5C4D42]/80 dark:bg-[#2A2421]/90 dark:text-[#D1C4B5] dark:hover:border-[#9EBA9E] dark:hover:text-[#9EBA9E]"
                       aria-label={isMapSettingsOpen ? 'Hide map settings' : 'Show map settings'}
                       aria-expanded={isMapSettingsOpen}
                     >
                       {isMapSettingsOpen ? <X className="h-5 w-5" /> : <Settings2 className="h-5 w-5" />}
                     </button>
+                    {selectedMapTarget && (
+                      <button
+                        type="button"
+                        onClick={clearSelectedMapTarget}
+                        className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-white/60 bg-white/90 text-[#6B5B4D] shadow-lg backdrop-blur-sm transition hover:border-[#D9A0A5] hover:text-[#D9A0A5] dark:border-[#5C4D42]/80 dark:bg-[#2A2421]/90 dark:text-[#D1C4B5] dark:hover:border-[#E2C07C] dark:hover:text-[#E2C07C]"
+                        aria-label="回到總覽地圖"
+                      >
+                        <ArrowLeft className="h-4 w-4" />
+                      </button>
+                    )}
                     {isMapSettingsOpen && (
                       <div className="w-[min(28rem,calc(100vw-2rem))] rounded-3xl border border-white/70 bg-white/95 p-4 shadow-2xl backdrop-blur-md dark:border-[#5C4D42]/80 dark:bg-[#362F2B]/95">
                         <div className="flex flex-col gap-3">
