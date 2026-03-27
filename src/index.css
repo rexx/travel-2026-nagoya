@@ -1,3 +1,4 @@
+@import url("https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@400;500;600;700;900&display=swap");
 @import "tailwindcss";
 
 @variant dark (&:where(.dark, .dark *));
@@ -75,5 +76,5 @@
 }
 
 @theme {
-  --font-serif: "Iowan Old Style", "Palatino Linotype", "Baskerville", "Times New Roman", serif;
+  --font-serif: "Songti TC", "Noto Serif TC", "Iowan Old Style", "Palatino Linotype", "Baskerville", ui-serif, Georgia, Cambria, "Times New Roman", Times, serif;
 }
