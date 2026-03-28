@@ -1,5 +1,6 @@
 export interface ItineraryItem {
   day: string;
+  slug: string;
   date: string;
   weekday: string;
   hotel: string;
@@ -7,6 +8,29 @@ export interface ItineraryItem {
   schedule: string;
   rainBackup: string;
   status: string;
+}
+
+export interface ItineraryTimelineItem {
+  time: string;
+  activity: string;
+  note?: string;
+}
+
+export interface ItineraryDetail {
+  day: string;
+  slug: string;
+  title: string;
+  date: string;
+  weekday: string;
+  theme: string;
+  intro: string;
+  hotel: string;
+  breakfast: string;
+  status?: string;
+  timeline: ItineraryTimelineItem[];
+  rainPlan?: string;
+  transport?: string[];
+  tips?: string[];
 }
 
 export interface FoodItem {

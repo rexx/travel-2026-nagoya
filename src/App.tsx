@@ -1,8 +1,8 @@
 import { useState, useEffect, useRef } from 'react';
-import { CalendarDays, UtensilsCrossed, Map, MapPin, Clock, Banknote, Info, Pencil, CloudRain, AlertCircle, CheckCircle2, BedDouble, Sun, Moon, CreditCard, Smartphone, MapPinned, Settings2, X, PlaneTakeoff, PlaneLanding, Trash2, Save, LayoutGrid, List, ChevronDown, ChevronUp, WifiOff, ExternalLink, ArrowLeft } from 'lucide-react';
-import { itineraryData, foodData, attractionData, creditCardData, promoData, ePayData } from './data';
+import { CalendarDays, UtensilsCrossed, Map, MapPin, Clock, Banknote, Info, Pencil, CloudRain, AlertCircle, CheckCircle2, BedDouble, Sun, Moon, CreditCard, Smartphone, MapPinned, Settings2, X, PlaneTakeoff, PlaneLanding, Trash2, Save, LayoutGrid, List, ChevronDown, WifiOff, ExternalLink, ArrowLeft } from 'lucide-react';
+import { itineraryData, itineraryDetailMap, foodData, attractionData, creditCardData, promoData, ePayData } from './data';
 import { motion, AnimatePresence } from 'motion/react';
-import { AttractionItem, FoodItem, ItineraryItem } from './types';
+import { AttractionItem, FoodItem, ItineraryDetail, ItineraryItem } from './types';
 
 type Tab = 'itinerary' | 'food' | 'attractions' | 'cards' | 'map';
 type ItineraryViewMode = 'card' | 'list';
@@ -253,6 +253,7 @@ export default function App() {
   const [activeItineraryNoteEditor, setActiveItineraryNoteEditor] = useState<string | null>(null);
   const [itineraryViewMode, setItineraryViewMode] = useState<ItineraryViewMode>('card');
   const [expandedItineraryDays, setExpandedItineraryDays] = useState<string[]>([]);
+  const [activeItineraryDay, setActiveItineraryDay] = useState<string | null>(null);
   const [foodCategoryFilter, setFoodCategoryFilter] = useState(ALL_FILTER_LABEL);
   const [attractionCategoryFilter, setAttractionCategoryFilter] = useState(ALL_FILTER_LABEL);
   const [attractionConditionFilters, setAttractionConditionFilters] = useState<AttractionConditionKey[]>([]);
@@ -283,6 +284,7 @@ export default function App() {
     : '';
   const displayedMapUrl = selectedMapUrl || mapEmbedUrl.trim();
   const canRenderMapIframe = !isOffline && Boolean(displayedMapUrl);
+  const activeItineraryDetail = activeItineraryDay ? itineraryDetailMap[activeItineraryDay] ?? null : null;
 
   useEffect(() => {
     const isStandalone = isStandaloneWebApp();
@@ -329,6 +331,14 @@ export default function App() {
 
     return () => window.removeEventListener('resize', updateNavHeight);
   }, []);
+
+  useEffect(() => {
+    if (!activeItineraryDay) {
+      return;
+    }
+
+    window.scrollTo({ top: 0, behavior: 'auto' });
+  }, [activeItineraryDay]);
 
   const applyMapEmbedUrl = () => {
     if (typeof window === 'undefined') {
@@ -485,6 +495,16 @@ export default function App() {
     });
   };
 
+  const openItineraryDetail = (day: string) => {
+    setActiveItineraryDay(day);
+    setActiveItineraryNoteEditor(null);
+  };
+
+  const closeItineraryDetail = () => {
+    setActiveItineraryDay(null);
+    setActiveItineraryNoteEditor(null);
+  };
+
   const toggleItineraryExpanded = (day: string) => {
     setExpandedItineraryDays((current) =>
       current.includes(day) ? current.filter((item) => item !== day) : [...current, day],
@@ -606,9 +626,7 @@ export default function App() {
       <button
         type="button"
         onClick={(event) => {
-          if (compact) {
-            event.stopPropagation();
-          }
+          event.stopPropagation();
           setActiveFlightEditor((current) => current === flightSegmentKey ? null : flightSegmentKey);
         }}
         className={`flex w-full items-start gap-2 rounded-lg border border-[#F0E5E1] bg-[#FDF8F5] text-left text-sm text-[#6B5B4D] transition hover:border-[#D9A0A5] dark:border-[#5C4D42]/50 dark:bg-[#4A3F35]/50 dark:text-[#D1C4B5] dark:hover:border-[#9EBA9E] ${hasSavedFlightInfo ? 'p-3' : 'px-3 py-2'}`}
@@ -658,6 +676,57 @@ export default function App() {
     );
   };
 
+  const renderFlightEditor = (flightSegmentKey: FlightSegmentKey) => (
+    <div
+      className="rounded-xl border border-[#E8DCC4] bg-[#FAF5F0] p-3 dark:border-[#5C4D42] dark:bg-[#2A2421]"
+      onClick={(event) => event.stopPropagation()}
+      onKeyDown={(event) => event.stopPropagation()}
+    >
+      <div className="mb-3 flex items-start justify-between gap-3">
+        <div>
+          <p className="text-sm font-semibold text-[#4A3F35] dark:text-[#FDF8F5]">
+            {flightSegmentKey === 'arrival' ? '去程航班設定' : '回程航班設定'}
+          </p>
+        </div>
+        <div className="flex gap-2">
+          <button
+            type="button"
+            onClick={() => clearFlightSegment(flightSegmentKey)}
+            aria-label="清空航班資訊"
+            title="清空航班資訊"
+            className="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-[#E8DCC4] text-[#8C7A6B] transition hover:border-[#D9A0A5] hover:text-[#6B5B4D] dark:border-[#5C4D42] dark:text-[#A89F91] dark:hover:border-[#9EBA9E] dark:hover:text-[#D1C4B5]"
+          >
+            <Trash2 className="h-4 w-4" />
+          </button>
+          <button
+            type="button"
+            onClick={applyFlightInfo}
+            aria-label="儲存航班資訊"
+            title="儲存航班資訊"
+            className="inline-flex h-9 w-9 items-center justify-center rounded-xl bg-[#D9A0A5] text-white transition hover:bg-[#C88992] dark:bg-[#7A907A] dark:hover:bg-[#6A816A]"
+          >
+            <Save className="h-4 w-4" />
+          </button>
+        </div>
+      </div>
+
+      <div className="grid gap-3 sm:grid-cols-2">
+        <input type="text" value={flightInfoDraft[flightSegmentKey].airline} onChange={(event) => updateFlightDraft(flightSegmentKey, 'airline', event.target.value)} placeholder="航空公司" className={flightTextInputClassName} />
+        <input type="text" value={flightInfoDraft[flightSegmentKey].flightNumber} onChange={(event) => updateFlightDraft(flightSegmentKey, 'flightNumber', event.target.value)} placeholder="航班編號" className={flightTextInputClassName} />
+        <input type="text" value={flightInfoDraft[flightSegmentKey].departureAirport} onChange={(event) => updateFlightDraft(flightSegmentKey, 'departureAirport', event.target.value)} placeholder="出發機場" className={flightTextInputClassName} />
+        <input type="text" value={flightInfoDraft[flightSegmentKey].arrivalAirport} onChange={(event) => updateFlightDraft(flightSegmentKey, 'arrivalAirport', event.target.value)} placeholder="抵達機場" className={flightTextInputClassName} />
+        <div className={flightDateTimeFieldClassName}>
+          <input type="datetime-local" value={flightInfoDraft[flightSegmentKey].departureTime} onChange={(event) => updateFlightDraft(flightSegmentKey, 'departureTime', event.target.value)} className={flightDateTimeInputClassName} />
+        </div>
+        <div className={flightDateTimeFieldClassName}>
+          <input type="datetime-local" value={flightInfoDraft[flightSegmentKey].arrivalTime} onChange={(event) => updateFlightDraft(flightSegmentKey, 'arrivalTime', event.target.value)} className={flightDateTimeInputClassName} />
+        </div>
+        <input type="text" value={flightInfoDraft[flightSegmentKey].terminal} onChange={(event) => updateFlightDraft(flightSegmentKey, 'terminal', event.target.value)} placeholder="航廈 / 櫃位備註" className={`${flightTextInputClassName} sm:col-span-2`} />
+        <textarea value={flightInfoDraft[flightSegmentKey].note} onChange={(event) => updateFlightDraft(flightSegmentKey, 'note', event.target.value)} placeholder="備註" rows={2} className={`${flightTextInputClassName} sm:col-span-2`} />
+      </div>
+    </div>
+  );
+
   const renderItineraryItem = (item: ItineraryItem, idx: number) => {
     const flightSegment =
       item.day === 'Day 1'
@@ -671,10 +740,9 @@ export default function App() {
         : item.day === 'Day 12'
           ? 'departure'
           : null;
-    const hasFlightInfo = flightSegment ? hasFlightSegmentData(flightSegment) : false;
     const isListView = itineraryViewMode === 'list';
-    const isExpanded = expandedItineraryDays.includes(item.day);
     const isNoteEditorOpen = activeItineraryNoteEditor === item.day;
+    const isExpanded = expandedItineraryDays.includes(item.day);
 
     if (isListView) {
       return (
@@ -684,179 +752,71 @@ export default function App() {
             idx > 0 ? 'border-t border-[#F0E5E1] dark:border-[#4A3F35]' : ''
           }`}
         >
-        <div className="space-y-1.5">
-          <div
-            role="button"
-            tabIndex={0}
-            onClick={() => toggleItineraryExpanded(item.day)}
-            onKeyDown={(event) => {
-              if (event.key === 'Enter' || event.key === ' ') {
-                event.preventDefault();
-                toggleItineraryExpanded(item.day);
-              }
-            }}
-            className="block w-full cursor-pointer text-left"
-            aria-expanded={isExpanded}
-            aria-label={`${isExpanded ? '收合' : '展開'} ${item.day} 行程`}
-          >
-            <div className="grid grid-cols-[auto_auto_minmax(0,1fr)_auto] items-center gap-x-2 text-xs">
-              <div className="whitespace-nowrap text-sm font-semibold text-[#4A3F35] dark:text-[#FDF8F5]">
-                {item.day}
-              </div>
-              <div className="whitespace-nowrap text-[#8C7A6B] dark:text-[#A89F91]">
-                {item.date} ({item.weekday})
-              </div>
-              <h3 className="min-w-0 truncate text-sm font-bold text-[#4A3F35] dark:text-[#FDF8F5] font-serif">
-                {item.theme}
-              </h3>
-              <div className="flex shrink-0 items-center gap-2 justify-end">
-                <span className="inline-flex items-center justify-center rounded-full border border-[#E8DCC4] bg-[#FAF5F0] p-1.5 text-[#8C7A6B] dark:border-[#5C4D42] dark:bg-[#2A2421] dark:text-[#A89F91]">
-                  {isExpanded ? <ChevronUp className="h-3.5 w-3.5" /> : <ChevronDown className="h-3.5 w-3.5" />}
-                </span>
-              </div>
-            </div>
-          </div>
-
-          {isExpanded && (
-            <div className="grid gap-2 md:grid-cols-[7rem_minmax(0,1fr)]">
-              <div />
-              <div className="min-w-0 space-y-3">
-                <div className="rounded-xl bg-[#FAF5F0] px-3 py-3 text-sm text-[#6B5B4D] dark:bg-[#2A2421] dark:text-[#D1C4B5]">
-                  <div className="space-y-3">
-                    <div className="flex items-start gap-2">
-                      <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-[#A89F91] dark:text-[#8C7A6B]" />
-                      <p className="leading-6">{item.schedule}</p>
-                    </div>
-
-                    {item.hotel !== '—' && (
-                      <div className="flex items-start gap-2">
-                        <BedDouble className="mt-0.5 h-4 w-4 shrink-0 text-[#A89F91] dark:text-[#8C7A6B]" />
-                        <p>{item.hotel}</p>
-                      </div>
-                    )}
-
-                    {item.rainBackup !== '—' && (
-                      <div className="flex items-start gap-2">
-                        <CloudRain className="mt-0.5 h-4 w-4 shrink-0 text-blue-400 dark:text-blue-500" />
-                        <p className="leading-6">{item.rainBackup}</p>
-                      </div>
-                    )}
-                  </div>
+          <div className="space-y-2">
+            <button
+              type="button"
+              onClick={() => toggleItineraryExpanded(item.day)}
+              aria-label={`${isExpanded ? '收合' : '展開'} ${item.day} 行程摘要`}
+              className="block w-full rounded-xl px-0 py-0 text-left transition hover:bg-[#FAF5F0] hover:px-3 hover:py-2 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#D9A0A5]/30 dark:hover:bg-[#2A2421] dark:focus-visible:ring-[#E2C07C]/30"
+            >
+              <div className="grid grid-cols-[auto_auto_minmax(0,1fr)_auto] items-center gap-x-2 text-xs">
+                <div className="whitespace-nowrap text-sm font-semibold text-[#4A3F35] dark:text-[#FDF8F5]">
+                  {item.day}
                 </div>
-
-                {flightSegmentKey && flightSegment && renderFlightSummaryCard(item.day, flightSegment, flightSegmentKey, true)}
-
-                {flightSegmentKey && activeFlightEditor === flightSegmentKey && (
-                  <div
-                    className="rounded-xl border border-[#E8DCC4] bg-[#FAF5F0] p-3 dark:border-[#5C4D42] dark:bg-[#2A2421]"
-                    onClick={(event) => event.stopPropagation()}
-                    onKeyDown={(event) => event.stopPropagation()}
-                  >
-                    <div className="mb-3 flex items-start justify-between gap-3">
-                      <div>
-                        <p className="text-sm font-semibold text-[#4A3F35] dark:text-[#FDF8F5]">
-                          {flightSegmentKey === 'arrival' ? '去程航班設定' : '回程航班設定'}
-                        </p>
-                      </div>
-                      <div className="flex gap-2">
-                        <button
-                          type="button"
-                          onClick={() => clearFlightSegment(flightSegmentKey)}
-                          aria-label="清空航班資訊"
-                          title="清空航班資訊"
-                          className="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-[#E8DCC4] text-[#8C7A6B] transition hover:border-[#D9A0A5] hover:text-[#6B5B4D] dark:border-[#5C4D42] dark:text-[#A89F91] dark:hover:border-[#9EBA9E] dark:hover:text-[#D1C4B5]"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </button>
-                        <button
-                          type="button"
-                          onClick={applyFlightInfo}
-                          aria-label="儲存航班資訊"
-                          title="儲存航班資訊"
-                          className="inline-flex h-9 w-9 items-center justify-center rounded-xl bg-[#D9A0A5] text-white transition hover:bg-[#C88992] dark:bg-[#7A907A] dark:hover:bg-[#6A816A]"
-                        >
-                          <Save className="h-4 w-4" />
-                        </button>
-                      </div>
-                    </div>
-
-                    <div className="grid gap-3 sm:grid-cols-2">
-                      <input
-                        type="text"
-                        value={flightInfoDraft[flightSegmentKey].airline}
-                        onChange={(event) => updateFlightDraft(flightSegmentKey, 'airline', event.target.value)}
-                        placeholder="航空公司"
-                        className={flightTextInputClassName}
-                      />
-                      <input
-                        type="text"
-                        value={flightInfoDraft[flightSegmentKey].flightNumber}
-                        onChange={(event) => updateFlightDraft(flightSegmentKey, 'flightNumber', event.target.value)}
-                        placeholder="航班編號"
-                        className={flightTextInputClassName}
-                      />
-                      <input
-                        type="text"
-                        value={flightInfoDraft[flightSegmentKey].departureAirport}
-                        onChange={(event) => updateFlightDraft(flightSegmentKey, 'departureAirport', event.target.value)}
-                        placeholder="出發機場"
-                        className={flightTextInputClassName}
-                      />
-                      <input
-                        type="text"
-                        value={flightInfoDraft[flightSegmentKey].arrivalAirport}
-                        onChange={(event) => updateFlightDraft(flightSegmentKey, 'arrivalAirport', event.target.value)}
-                        placeholder="抵達機場"
-                        className={flightTextInputClassName}
-                      />
-                      <div className={flightDateTimeFieldClassName}>
-                        <input
-                          type="datetime-local"
-                          value={flightInfoDraft[flightSegmentKey].departureTime}
-                          onChange={(event) => updateFlightDraft(flightSegmentKey, 'departureTime', event.target.value)}
-                          className={flightDateTimeInputClassName}
-                        />
-                      </div>
-                      <div className={flightDateTimeFieldClassName}>
-                        <input
-                          type="datetime-local"
-                          value={flightInfoDraft[flightSegmentKey].arrivalTime}
-                          onChange={(event) => updateFlightDraft(flightSegmentKey, 'arrivalTime', event.target.value)}
-                          className={flightDateTimeInputClassName}
-                        />
-                      </div>
-                      <input
-                        type="text"
-                        value={flightInfoDraft[flightSegmentKey].terminal}
-                        onChange={(event) => updateFlightDraft(flightSegmentKey, 'terminal', event.target.value)}
-                        placeholder="航廈 / 櫃位備註"
-                        className={`${flightTextInputClassName} sm:col-span-2`}
-                      />
-                      <textarea
-                        value={flightInfoDraft[flightSegmentKey].note}
-                        onChange={(event) => updateFlightDraft(flightSegmentKey, 'note', event.target.value)}
-                        placeholder="備註"
-                        rows={2}
-                        className={`${flightTextInputClassName} sm:col-span-2`}
-                      />
-                    </div>
-                  </div>
-                )}
-
-                {renderSavedItineraryNote(item.day)}
-
-                {isNoteEditorOpen && renderItineraryNoteEditor(item.day, true)}
+                <div className="whitespace-nowrap text-[#8C7A6B] dark:text-[#A89F91]">
+                  {item.date} ({item.weekday})
+                </div>
+                <h3 className="min-w-0 truncate text-sm font-bold text-[#4A3F35] dark:text-[#FDF8F5] font-serif">
+                  {item.theme}
+                </h3>
+                <div className="flex shrink-0 items-center gap-2 justify-end">
+                  <span className="inline-flex items-center justify-center rounded-full border border-[#E8DCC4] bg-[#FAF5F0] p-1.5 text-[#8C7A6B] dark:border-[#5C4D42] dark:bg-[#2A2421] dark:text-[#A89F91]">
+                    <ChevronDown className={`h-3.5 w-3.5 transition-transform ${isExpanded ? 'rotate-180' : ''}`} />
+                  </span>
+                </div>
               </div>
-            </div>
-          )}
-        </div>
+            </button>
+
+            {isExpanded && (
+              <>
+                <button
+                  type="button"
+                  onClick={() => openItineraryDetail(item.day)}
+                  className="flex w-full items-start gap-2 rounded-xl text-left text-sm text-[#6B5B4D] transition hover:bg-[#FAF5F0] hover:px-3 hover:py-2 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#D9A0A5]/30 dark:text-[#D1C4B5] dark:hover:bg-[#2A2421] dark:focus-visible:ring-[#E2C07C]/30"
+                  aria-label={`查看 ${item.day} 當日細節`}
+                >
+                  <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-[#A89F91] dark:text-[#8C7A6B]" />
+                  <p className="line-clamp-2 leading-6">{item.schedule}</p>
+                </button>
+
+                <div className="space-y-2" onClick={(event) => event.stopPropagation()} onKeyDown={(event) => event.stopPropagation()}>
+                  {flightSegmentKey && flightSegment && renderFlightSummaryCard(item.day, flightSegment, flightSegmentKey, true)}
+                  {flightSegmentKey && activeFlightEditor === flightSegmentKey && renderFlightEditor(flightSegmentKey)}
+                  {renderSavedItineraryNote(item.day)}
+                  {isNoteEditorOpen && renderItineraryNoteEditor(item.day, true)}
+                </div>
+              </>
+            )}
+          </div>
         </div>
       );
     }
 
     return (
       <div key={idx} className="relative flex flex-col group is-active">
-        <div className="w-full bg-white dark:bg-[#362F2B] p-4 rounded-2xl shadow-sm border border-[#F0E5E1] dark:border-[#4A3F35] transition-colors duration-200">
+        <div
+          role="button"
+          tabIndex={0}
+          onClick={() => openItineraryDetail(item.day)}
+          onKeyDown={(event) => {
+            if (event.key === 'Enter' || event.key === ' ') {
+              event.preventDefault();
+              openItineraryDetail(item.day);
+            }
+          }}
+          className="w-full cursor-pointer rounded-2xl border border-[#F0E5E1] bg-white p-4 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md focus:outline-none focus-visible:ring-2 focus-visible:ring-[#D9A0A5]/40 dark:border-[#4A3F35] dark:bg-[#362F2B] dark:focus-visible:ring-[#E2C07C]/40"
+          aria-label={`查看 ${item.day} 當日細流`}
+        >
           <div className="flex justify-between items-start mb-2">
             <div>
               <div>
@@ -894,111 +854,156 @@ export default function App() {
               )}
             </div>
 
-            <div className="space-y-3">
+            <div className="space-y-3" onClick={(event) => event.stopPropagation()} onKeyDown={(event) => event.stopPropagation()}>
               {flightSegmentKey && flightSegment && renderFlightSummaryCard(item.day, flightSegment, flightSegmentKey)}
-
-              {flightSegmentKey && activeFlightEditor === flightSegmentKey && (
-                <div
-                  className="rounded-xl border border-[#E8DCC4] bg-[#FAF5F0] p-3 dark:border-[#5C4D42] dark:bg-[#2A2421]"
-                  onClick={(event) => event.stopPropagation()}
-                  onKeyDown={(event) => event.stopPropagation()}
-                >
-                  <div className="mb-3 flex items-start justify-between gap-3">
-                    <div>
-                      <p className="text-sm font-semibold text-[#4A3F35] dark:text-[#FDF8F5]">
-                        {flightSegmentKey === 'arrival' ? '去程航班設定' : '回程航班設定'}
-                      </p>
-                    </div>
-                    <div className="flex gap-2">
-                      <button
-                        type="button"
-                        onClick={() => clearFlightSegment(flightSegmentKey)}
-                        aria-label="清空航班資訊"
-                        title="清空航班資訊"
-                        className="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-[#E8DCC4] text-[#8C7A6B] transition hover:border-[#D9A0A5] hover:text-[#6B5B4D] dark:border-[#5C4D42] dark:text-[#A89F91] dark:hover:border-[#9EBA9E] dark:hover:text-[#D1C4B5]"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </button>
-                      <button
-                        type="button"
-                        onClick={applyFlightInfo}
-                        aria-label="儲存航班資訊"
-                        title="儲存航班資訊"
-                        className="inline-flex h-9 w-9 items-center justify-center rounded-xl bg-[#D9A0A5] text-white transition hover:bg-[#C88992] dark:bg-[#7A907A] dark:hover:bg-[#6A816A]"
-                      >
-                        <Save className="h-4 w-4" />
-                      </button>
-                    </div>
-                  </div>
-
-                  <div className="grid gap-3 sm:grid-cols-2">
-                    <input
-                      type="text"
-                      value={flightInfoDraft[flightSegmentKey].airline}
-                      onChange={(event) => updateFlightDraft(flightSegmentKey, 'airline', event.target.value)}
-                      placeholder="航空公司"
-                      className={flightTextInputClassName}
-                    />
-                    <input
-                      type="text"
-                      value={flightInfoDraft[flightSegmentKey].flightNumber}
-                      onChange={(event) => updateFlightDraft(flightSegmentKey, 'flightNumber', event.target.value)}
-                      placeholder="航班編號"
-                      className={flightTextInputClassName}
-                    />
-                    <input
-                      type="text"
-                      value={flightInfoDraft[flightSegmentKey].departureAirport}
-                      onChange={(event) => updateFlightDraft(flightSegmentKey, 'departureAirport', event.target.value)}
-                      placeholder="出發機場"
-                      className={flightTextInputClassName}
-                    />
-                    <input
-                      type="text"
-                      value={flightInfoDraft[flightSegmentKey].arrivalAirport}
-                      onChange={(event) => updateFlightDraft(flightSegmentKey, 'arrivalAirport', event.target.value)}
-                      placeholder="抵達機場"
-                      className={flightTextInputClassName}
-                    />
-                    <div className={flightDateTimeFieldClassName}>
-                      <input
-                        type="datetime-local"
-                        value={flightInfoDraft[flightSegmentKey].departureTime}
-                        onChange={(event) => updateFlightDraft(flightSegmentKey, 'departureTime', event.target.value)}
-                        className={flightDateTimeInputClassName}
-                      />
-                    </div>
-                    <div className={flightDateTimeFieldClassName}>
-                      <input
-                        type="datetime-local"
-                        value={flightInfoDraft[flightSegmentKey].arrivalTime}
-                        onChange={(event) => updateFlightDraft(flightSegmentKey, 'arrivalTime', event.target.value)}
-                        className={flightDateTimeInputClassName}
-                      />
-                    </div>
-                    <input
-                      type="text"
-                      value={flightInfoDraft[flightSegmentKey].terminal}
-                      onChange={(event) => updateFlightDraft(flightSegmentKey, 'terminal', event.target.value)}
-                      placeholder="航廈 / 櫃位備註"
-                      className={`${flightTextInputClassName} sm:col-span-2`}
-                    />
-                    <textarea
-                      value={flightInfoDraft[flightSegmentKey].note}
-                      onChange={(event) => updateFlightDraft(flightSegmentKey, 'note', event.target.value)}
-                      placeholder="備註"
-                      rows={2}
-                      className={`${flightTextInputClassName} sm:col-span-2`}
-                    />
-                  </div>
-                </div>
-              )}
-
+              {flightSegmentKey && activeFlightEditor === flightSegmentKey && renderFlightEditor(flightSegmentKey)}
               {renderSavedItineraryNote(item.day)}
-
               {isNoteEditorOpen && renderItineraryNoteEditor(item.day)}
             </div>
           </div>
+        </div>
+      </div>
+    );
+  };
+
+  const renderItineraryDetailView = (detail: ItineraryDetail) => {
+    const flightSegment =
+      detail.day === 'Day 1'
+        ? flightInfo.arrival
+        : detail.day === 'Day 12'
+          ? flightInfo.departure
+          : null;
+    const flightSegmentKey =
+      detail.day === 'Day 1'
+        ? 'arrival'
+        : detail.day === 'Day 12'
+          ? 'departure'
+          : null;
+    const isNoteEditorOpen = activeItineraryNoteEditor === detail.day;
+
+    return (
+      <div className="space-y-4">
+        <button
+          type="button"
+          onClick={closeItineraryDetail}
+          className="inline-flex items-center gap-2 rounded-full border border-[#E8DCC4] bg-white px-4 py-2 text-sm font-medium text-[#6B5B4D] transition hover:border-[#D9A0A5] hover:text-[#4A3F35] dark:border-[#5C4D42] dark:bg-[#362F2B] dark:text-[#D1C4B5] dark:hover:border-[#E2C07C] dark:hover:text-[#FDF8F5]"
+        >
+          <ArrowLeft className="h-4 w-4" />
+          返回行程總覽
+        </button>
+
+        <div className="rounded-[28px] border border-[#F0E5E1] bg-white p-5 shadow-sm dark:border-[#4A3F35] dark:bg-[#362F2B]">
+          <div className="space-y-4">
+            <div className="flex flex-wrap items-center gap-2 text-xs">
+              <span className="rounded-md bg-[#FDF8F5] px-2 py-1 font-bold text-[#D9A0A5] dark:bg-[#E2C07C]/20 dark:text-[#E2C07C]">
+                {detail.day}
+              </span>
+              <span className="text-[#8C7A6B] dark:text-[#A89F91]">
+                {detail.date}（{detail.weekday}）
+              </span>
+            </div>
+
+            <div>
+              <h2 className="text-2xl font-bold text-[#4A3F35] dark:text-[#FDF8F5] font-serif">{detail.theme}</h2>
+              <p className="mt-2 text-sm leading-7 text-[#6B5B4D] dark:text-[#D1C4B5]">{detail.intro}</p>
+            </div>
+
+          </div>
+        </div>
+
+        <div className="rounded-[28px] border border-[#F0E5E1] bg-white p-5 shadow-sm dark:border-[#4A3F35] dark:bg-[#362F2B]">
+          <h3 className="text-lg font-bold text-[#4A3F35] dark:text-[#FDF8F5] font-serif">當日行程</h3>
+          <div className="mt-5 space-y-4">
+            <div className="rounded-2xl border border-[#F0E5E1] bg-[#FDF8F5] p-4 dark:border-[#4A3F35] dark:bg-[#2A2421]">
+              <div className="flex items-center gap-2 text-sm font-semibold text-[#4A3F35] dark:text-[#FDF8F5]">
+                <CalendarDays className="h-4 w-4 text-[#A89F91] dark:text-[#8C7A6B]" />
+                早餐
+              </div>
+              <p className="mt-2 text-sm leading-6 text-[#6B5B4D] dark:text-[#D1C4B5]">{detail.breakfast}</p>
+            </div>
+
+            {detail.timeline.map((timelineItem) => (
+              <div
+                key={`${detail.day}-${timelineItem.time}-${timelineItem.activity}`}
+                className="grid gap-3 rounded-2xl border border-[#F0E5E1] bg-[#FDF8F5] p-4 dark:border-[#4A3F35] dark:bg-[#2A2421]"
+              >
+                <div className="text-xs font-semibold uppercase tracking-[0.18em] text-[#D9A0A5] dark:text-[#E2C07C]">
+                  {timelineItem.time}
+                </div>
+                <div className="space-y-2">
+                  <p className="text-sm font-semibold leading-6 text-[#4A3F35] dark:text-[#FDF8F5]">{timelineItem.activity}</p>
+                  {timelineItem.note && (
+                    <p className="text-sm leading-6 text-[#6B5B4D] dark:text-[#D1C4B5]">{timelineItem.note}</p>
+                  )}
+                </div>
+              </div>
+            ))}
+
+            <div className="rounded-2xl border border-[#F0E5E1] bg-[#FDF8F5] p-4 dark:border-[#4A3F35] dark:bg-[#2A2421]">
+              <div className="flex items-center gap-2 text-sm font-semibold text-[#4A3F35] dark:text-[#FDF8F5]">
+                <BedDouble className="h-4 w-4 text-[#A89F91] dark:text-[#8C7A6B]" />
+                住宿
+              </div>
+              <p className="mt-2 text-sm leading-6 text-[#6B5B4D] dark:text-[#D1C4B5]">{detail.hotel}</p>
+            </div>
+          </div>
+        </div>
+
+        {(detail.rainPlan || detail.transport?.length || detail.tips?.length) && (
+          <div className="grid gap-4 lg:grid-cols-3">
+            {detail.rainPlan && (
+              <div className="rounded-[24px] border border-[#F0E5E1] bg-white p-5 shadow-sm dark:border-[#4A3F35] dark:bg-[#362F2B]">
+                <div className="flex items-center gap-2 text-sm font-semibold text-[#4A3F35] dark:text-[#FDF8F5]">
+                  <CloudRain className="h-4 w-4 text-blue-400 dark:text-blue-500" />
+                  雨天備案
+                </div>
+                <p className="mt-3 text-sm leading-7 text-[#6B5B4D] dark:text-[#D1C4B5]">{detail.rainPlan}</p>
+              </div>
+            )}
+
+            {detail.transport?.length ? (
+              <div className="rounded-[24px] border border-[#F0E5E1] bg-white p-5 shadow-sm dark:border-[#4A3F35] dark:bg-[#362F2B]">
+                <div className="flex items-center gap-2 text-sm font-semibold text-[#4A3F35] dark:text-[#FDF8F5]">
+                  <MapPinned className="h-4 w-4 text-[#D9A0A5] dark:text-[#E2C07C]" />
+                  交通
+                </div>
+                <ul className="mt-3 space-y-2 text-sm leading-7 text-[#6B5B4D] dark:text-[#D1C4B5]">
+                  {detail.transport.map((transportItem) => (
+                    <li key={transportItem} className="flex gap-2">
+                      <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-[#D9A0A5] dark:bg-[#E2C07C]" />
+                      <span>{transportItem}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ) : null}
+
+            {detail.tips?.length ? (
+              <div className="rounded-[24px] border border-[#F0E5E1] bg-white p-5 shadow-sm dark:border-[#4A3F35] dark:bg-[#362F2B]">
+                <div className="flex items-center gap-2 text-sm font-semibold text-[#4A3F35] dark:text-[#FDF8F5]">
+                  <Info className="h-4 w-4 text-[#D9A0A5] dark:text-[#E2C07C]" />
+                  建議提醒
+                </div>
+                <ul className="mt-3 space-y-2 text-sm leading-7 text-[#6B5B4D] dark:text-[#D1C4B5]">
+                  {detail.tips.map((tip) => (
+                    <li key={tip} className="flex gap-2">
+                      <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-[#D9A0A5] dark:bg-[#E2C07C]" />
+                      <span>{tip}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ) : null}
+          </div>
+        )}
+
+        <div className="space-y-3">
+          {flightSegmentKey && flightSegment && renderFlightSummaryCard(detail.day, flightSegment, flightSegmentKey)}
+
+          {flightSegmentKey && activeFlightEditor === flightSegmentKey && renderFlightEditor(flightSegmentKey)}
+
+          {renderSavedItineraryNote(detail.day)}
+          {isNoteEditorOpen && renderItineraryNoteEditor(detail.day)}
         </div>
       </div>
     );
@@ -1048,48 +1053,54 @@ export default function App() {
               transition={{ duration: 0.2 }}
               className="space-y-4"
             >
-              <div className="mb-6">
-                <div>
-                  <div className="flex items-center justify-between gap-3">
-                    <h2 className="text-xl font-bold text-[#4A3F35] dark:text-[#FDF8F5] flex items-center gap-2 font-serif">
-                      <CalendarDays className="w-5 h-5 text-[#D9A0A5] dark:text-[#E2C07C]" />
-                      行程總覽
-                    </h2>
-                    <div className="inline-flex shrink-0 rounded-2xl border border-[#E8DCC4] bg-white p-1 shadow-sm dark:border-[#5C4D42] dark:bg-[#362F2B]">
-                      <button
-                        type="button"
-                        onClick={() => setItineraryViewMode('card')}
-                        className={`inline-flex items-center justify-center rounded-xl p-2 transition ${itineraryViewMode === 'card' ? 'bg-[#FAF5F0] text-[#6B5B4D] dark:bg-[#4A3F35] dark:text-[#FDF8F5]' : 'text-[#8C7A6B] hover:text-[#6B5B4D] dark:text-[#A89F91] dark:hover:text-[#FDF8F5]'}`}
-                        aria-pressed={itineraryViewMode === 'card'}
-                        aria-label="切換為卡片檢視"
-                        title="卡片"
-                      >
-                        <LayoutGrid className="h-4 w-4" />
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setItineraryViewMode('list')}
-                        className={`inline-flex items-center justify-center rounded-xl p-2 transition ${itineraryViewMode === 'list' ? 'bg-[#FAF5F0] text-[#6B5B4D] dark:bg-[#4A3F35] dark:text-[#FDF8F5]' : 'text-[#8C7A6B] hover:text-[#6B5B4D] dark:text-[#A89F91] dark:hover:text-[#FDF8F5]'}`}
-                        aria-pressed={itineraryViewMode === 'list'}
-                        aria-label="切換為列表檢視"
-                        title="列表"
-                      >
-                        <List className="h-4 w-4" />
-                      </button>
+              {activeItineraryDetail ? (
+                renderItineraryDetailView(activeItineraryDetail)
+              ) : (
+                <>
+                  <div className="mb-6">
+                    <div>
+                      <div className="flex items-center justify-between gap-3">
+                        <h2 className="text-xl font-bold text-[#4A3F35] dark:text-[#FDF8F5] flex items-center gap-2 font-serif">
+                          <CalendarDays className="w-5 h-5 text-[#D9A0A5] dark:text-[#E2C07C]" />
+                          行程總覽
+                        </h2>
+                        <div className="inline-flex shrink-0 rounded-2xl border border-[#E8DCC4] bg-white p-1 shadow-sm dark:border-[#5C4D42] dark:bg-[#362F2B]">
+                          <button
+                            type="button"
+                            onClick={() => setItineraryViewMode('card')}
+                            className={`inline-flex items-center justify-center rounded-xl p-2 transition ${itineraryViewMode === 'card' ? 'bg-[#FAF5F0] text-[#6B5B4D] dark:bg-[#4A3F35] dark:text-[#FDF8F5]' : 'text-[#8C7A6B] hover:text-[#6B5B4D] dark:text-[#A89F91] dark:hover:text-[#FDF8F5]'}`}
+                            aria-pressed={itineraryViewMode === 'card'}
+                            aria-label="切換為卡片檢視"
+                            title="卡片"
+                          >
+                            <LayoutGrid className="h-4 w-4" />
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setItineraryViewMode('list')}
+                            className={`inline-flex items-center justify-center rounded-xl p-2 transition ${itineraryViewMode === 'list' ? 'bg-[#FAF5F0] text-[#6B5B4D] dark:bg-[#4A3F35] dark:text-[#FDF8F5]' : 'text-[#8C7A6B] hover:text-[#6B5B4D] dark:text-[#A89F91] dark:hover:text-[#FDF8F5]'}`}
+                            aria-pressed={itineraryViewMode === 'list'}
+                            aria-label="切換為列表檢視"
+                            title="列表"
+                          >
+                            <List className="h-4 w-4" />
+                          </button>
+                        </div>
+                      </div>
+                      <p className="text-sm text-[#8C7A6B] dark:text-[#A89F91] mt-1">每日行程與備案規劃</p>
                     </div>
                   </div>
-                  <p className="text-sm text-[#8C7A6B] dark:text-[#A89F91] mt-1">每日行程與備案規劃</p>
-                </div>
-              </div>
 
-              {itineraryViewMode === 'list' ? (
-                <div className="overflow-hidden rounded-2xl border border-[#F0E5E1] bg-white dark:border-[#4A3F35] dark:bg-[#362F2B]">
-                  {itineraryData.map(renderItineraryItem)}
-                </div>
-              ) : (
-                <div className="space-y-4">
-                  {itineraryData.map(renderItineraryItem)}
-                </div>
+                  {itineraryViewMode === 'list' ? (
+                    <div className="overflow-hidden rounded-2xl border border-[#F0E5E1] bg-white dark:border-[#4A3F35] dark:bg-[#362F2B]">
+                      {itineraryData.map(renderItineraryItem)}
+                    </div>
+                  ) : (
+                    <div className="space-y-4">
+                      {itineraryData.map(renderItineraryItem)}
+                    </div>
+                  )}
+                </>
               )}
             </motion.div>
           )}
