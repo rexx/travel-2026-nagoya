@@ -2,7 +2,11 @@
 
 ## Plan Mode
 
-- In plan mode, always develop in a git worktree.
+- In plan mode, always develop in a new git worktree and never modify the current directory directly.
+- Every plan must begin by explicitly stating that development will use a new git worktree and will not modify the current directory.
+- If a worktree has not been created yet, the plan must list worktree creation steps before implementation, testing, and validation steps.
+- All worktrees must be created under `worktrees/<branch-or-task-name>` inside the current repository.
+- For this repository, the valid worktree path pattern is `/Users/gtso/Downloads/ai-studio/travel-2026-nagoya/worktrees/<branch-or-task-name>`.
 - In a worktree, symlink `node_modules` from the main repo instead of downloading dependencies again.
 - After development is complete, start a local server and test the changes.
 
