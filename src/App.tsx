@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { CalendarDays, UtensilsCrossed, Map, MapPin, Clock, Banknote, Info, Pencil, CloudRain, AlertCircle, CheckCircle2, BedDouble, Sun, Moon, CreditCard, Smartphone, MapPinned, Settings2, X, PlaneTakeoff, PlaneLanding, Trash2, Save, LayoutGrid, List, ChevronDown, WifiOff, ExternalLink, ArrowLeft } from 'lucide-react';
+import { CalendarDays, UtensilsCrossed, Map, MapPin, Clock, Banknote, Info, Pencil, CloudRain, AlertCircle, CheckCircle2, BedDouble, Sun, Moon, CreditCard, Smartphone, MapPinned, Settings2, X, PlaneTakeoff, PlaneLanding, Trash2, Save, LayoutGrid, List, ChevronDown, WifiOff, ExternalLink, ArrowLeft, ChevronLeft, ChevronRight } from 'lucide-react';
 import { itineraryData, itineraryDetailMap, foodData, attractionData, creditCardData, promoData, ePayData } from './data';
 import { motion, AnimatePresence } from 'motion/react';
 import { AttractionItem, FoodItem, ItineraryDetail, ItineraryItem } from './types';
@@ -285,6 +285,14 @@ export default function App() {
   const displayedMapUrl = selectedMapUrl || mapEmbedUrl.trim();
   const canRenderMapIframe = !isOffline && Boolean(displayedMapUrl);
   const activeItineraryDetail = activeItineraryDay ? itineraryDetailMap[activeItineraryDay] ?? null : null;
+  const activeItineraryIndex = activeItineraryDay
+    ? itineraryData.findIndex((item) => item.day === activeItineraryDay)
+    : -1;
+  const previousItineraryItem = activeItineraryIndex > 0 ? itineraryData[activeItineraryIndex - 1] : null;
+  const nextItineraryItem =
+    activeItineraryIndex >= 0 && activeItineraryIndex < itineraryData.length - 1
+      ? itineraryData[activeItineraryIndex + 1]
+      : null;
 
   useEffect(() => {
     const isStandalone = isStandaloneWebApp();
@@ -498,11 +506,18 @@ export default function App() {
   const openItineraryDetail = (day: string) => {
     setActiveItineraryDay(day);
     setActiveItineraryNoteEditor(null);
+    setActiveFlightEditor(null);
   };
 
   const closeItineraryDetail = () => {
     setActiveItineraryDay(null);
     setActiveItineraryNoteEditor(null);
+  };
+
+  const navigateItineraryDetail = (day: string) => {
+    setActiveItineraryDay(day);
+    setActiveItineraryNoteEditor(null);
+    setActiveFlightEditor(null);
   };
 
   const toggleItineraryExpanded = (day: string) => {
@@ -883,14 +898,36 @@ export default function App() {
 
     return (
       <div className="space-y-4">
-        <button
-          type="button"
-          onClick={closeItineraryDetail}
-          className="inline-flex items-center gap-2 rounded-full border border-[#E8DCC4] bg-white px-4 py-2 text-sm font-medium text-[#6B5B4D] transition hover:border-[#D9A0A5] hover:text-[#4A3F35] dark:border-[#5C4D42] dark:bg-[#362F2B] dark:text-[#D1C4B5] dark:hover:border-[#E2C07C] dark:hover:text-[#FDF8F5]"
-        >
-          <ArrowLeft className="h-4 w-4" />
-          返回行程總覽
-        </button>
+        <div className="grid grid-cols-3 gap-2">
+          <button
+            type="button"
+            onClick={closeItineraryDetail}
+            className="inline-flex items-center justify-center gap-2 rounded-full border border-[#E8DCC4] bg-white px-3 py-2 text-sm font-medium text-[#6B5B4D] transition hover:border-[#D9A0A5] hover:text-[#4A3F35] dark:border-[#5C4D42] dark:bg-[#362F2B] dark:text-[#D1C4B5] dark:hover:border-[#E2C07C] dark:hover:text-[#FDF8F5]"
+          >
+            <ArrowLeft className="h-4 w-4 shrink-0" />
+            <span className="truncate">返回總覽</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => previousItineraryItem && navigateItineraryDetail(previousItineraryItem.day)}
+            disabled={!previousItineraryItem}
+            className="inline-flex items-center justify-center gap-2 rounded-full border border-[#E8DCC4] bg-white px-3 py-2 text-sm font-medium text-[#6B5B4D] transition hover:border-[#D9A0A5] hover:text-[#4A3F35] disabled:cursor-not-allowed disabled:opacity-40 dark:border-[#5C4D42] dark:bg-[#362F2B] dark:text-[#D1C4B5] dark:hover:border-[#E2C07C] dark:hover:text-[#FDF8F5]"
+            aria-label={previousItineraryItem ? `前往 ${previousItineraryItem.day}` : '沒有前一日行程'}
+          >
+            <ChevronLeft className="h-4 w-4 shrink-0" />
+            <span className="truncate">前一日</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => nextItineraryItem && navigateItineraryDetail(nextItineraryItem.day)}
+            disabled={!nextItineraryItem}
+            className="inline-flex items-center justify-center gap-2 rounded-full border border-[#E8DCC4] bg-white px-3 py-2 text-sm font-medium text-[#6B5B4D] transition hover:border-[#D9A0A5] hover:text-[#4A3F35] disabled:cursor-not-allowed disabled:opacity-40 dark:border-[#5C4D42] dark:bg-[#362F2B] dark:text-[#D1C4B5] dark:hover:border-[#E2C07C] dark:hover:text-[#FDF8F5]"
+            aria-label={nextItineraryItem ? `前往 ${nextItineraryItem.day}` : '沒有後一日行程'}
+          >
+            <span className="truncate">後一日</span>
+            <ChevronRight className="h-4 w-4 shrink-0" />
+          </button>
+        </div>
 
         <div className="rounded-[28px] border border-[#F0E5E1] bg-white p-5 shadow-sm dark:border-[#4A3F35] dark:bg-[#362F2B]">
           <div className="space-y-4">
