@@ -523,6 +523,7 @@ export default function App() {
       <div
         className={`rounded-xl border border-[#E8DCC4] bg-[#FAF5F0] p-3 dark:border-[#5C4D42] dark:bg-[#2A2421] ${compact ? '' : 'mt-3'}`}
         onClick={(event) => event.stopPropagation()}
+        onKeyDown={(event) => event.stopPropagation()}
       >
         <div className="mb-3 flex items-start justify-between gap-3">
           <div className="space-y-1">
@@ -572,7 +573,10 @@ export default function App() {
     return (
       <button
         type="button"
-        onClick={() => setActiveItineraryNoteEditor((current) => current === day ? null : day)}
+        onClick={(event) => {
+          event.stopPropagation();
+          setActiveItineraryNoteEditor((current) => current === day ? null : day);
+        }}
         className={`flex w-full items-start gap-2 rounded-lg border border-[#F0E5E1] bg-[#FDF8F5] text-left text-sm text-[#6B5B4D] transition hover:border-[#D9A0A5] dark:border-[#5C4D42]/50 dark:bg-[#4A3F35]/50 dark:text-[#D1C4B5] dark:hover:border-[#9EBA9E] ${hasSavedNote ? 'p-3' : 'px-3 py-2'}`}
       >
         <Pencil className="w-4 h-4 text-[#D9A0A5] dark:text-[#E2C07C] shrink-0 mt-0.5" />
@@ -680,6 +684,7 @@ export default function App() {
             idx > 0 ? 'border-t border-[#F0E5E1] dark:border-[#4A3F35]' : ''
           }`}
         >
+        <div className="space-y-1.5">
           <div
             role="button"
             tabIndex={0}
@@ -694,28 +699,30 @@ export default function App() {
             aria-expanded={isExpanded}
             aria-label={`${isExpanded ? '收合' : '展開'} ${item.day} 行程`}
           >
-            <div className="space-y-1.5">
-              <div className="grid grid-cols-[auto_auto_minmax(0,1fr)_auto] items-center gap-x-2 text-xs">
-                <div className="whitespace-nowrap text-sm font-semibold text-[#4A3F35] dark:text-[#FDF8F5]">
-                  {item.day}
-                </div>
-                <div className="whitespace-nowrap text-[#8C7A6B] dark:text-[#A89F91]">
-                  {item.date} ({item.weekday})
-                </div>
-                <h3 className="min-w-0 truncate text-sm font-bold text-[#4A3F35] dark:text-[#FDF8F5] font-serif">
-                  {item.theme}
-                </h3>
-                <div className="flex shrink-0 items-center gap-2 justify-end">
-                  <span className="inline-flex items-center justify-center rounded-full border border-[#E8DCC4] bg-[#FAF5F0] p-1.5 text-[#8C7A6B] dark:border-[#5C4D42] dark:bg-[#2A2421] dark:text-[#A89F91]">
-                    {isExpanded ? <ChevronUp className="h-3.5 w-3.5" /> : <ChevronDown className="h-3.5 w-3.5" />}
-                  </span>
-                </div>
+            <div className="grid grid-cols-[auto_auto_minmax(0,1fr)_auto] items-center gap-x-2 text-xs">
+              <div className="whitespace-nowrap text-sm font-semibold text-[#4A3F35] dark:text-[#FDF8F5]">
+                {item.day}
               </div>
+              <div className="whitespace-nowrap text-[#8C7A6B] dark:text-[#A89F91]">
+                {item.date} ({item.weekday})
+              </div>
+              <h3 className="min-w-0 truncate text-sm font-bold text-[#4A3F35] dark:text-[#FDF8F5] font-serif">
+                {item.theme}
+              </h3>
+              <div className="flex shrink-0 items-center gap-2 justify-end">
+                <span className="inline-flex items-center justify-center rounded-full border border-[#E8DCC4] bg-[#FAF5F0] p-1.5 text-[#8C7A6B] dark:border-[#5C4D42] dark:bg-[#2A2421] dark:text-[#A89F91]">
+                  {isExpanded ? <ChevronUp className="h-3.5 w-3.5" /> : <ChevronDown className="h-3.5 w-3.5" />}
+                </span>
+              </div>
+            </div>
+          </div>
 
-              {isExpanded && (
-                <div className="grid gap-2 md:grid-cols-[7rem_minmax(0,1fr)]">
-                  <div />
-                  <div className="min-w-0 space-y-3 rounded-xl bg-[#FAF5F0] px-3 py-3 text-sm text-[#6B5B4D] dark:bg-[#2A2421] dark:text-[#D1C4B5]">
+          {isExpanded && (
+            <div className="grid gap-2 md:grid-cols-[7rem_minmax(0,1fr)]">
+              <div />
+              <div className="min-w-0 space-y-3">
+                <div className="rounded-xl bg-[#FAF5F0] px-3 py-3 text-sm text-[#6B5B4D] dark:bg-[#2A2421] dark:text-[#D1C4B5]">
+                  <div className="space-y-3">
                     <div className="flex items-start gap-2">
                       <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-[#A89F91] dark:text-[#8C7A6B]" />
                       <p className="leading-6">{item.schedule}</p>
@@ -734,110 +741,115 @@ export default function App() {
                         <p className="leading-6">{item.rainBackup}</p>
                       </div>
                     )}
-
-                    {flightSegmentKey && flightSegment && renderFlightSummaryCard(item.day, flightSegment, flightSegmentKey, true)}
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
-
-          {isExpanded && flightSegmentKey && activeFlightEditor === flightSegmentKey && (
-            <div className="mt-3 rounded-xl border border-[#E8DCC4] bg-[#FAF5F0] p-3 dark:border-[#5C4D42] dark:bg-[#2A2421]">
-                <div className="mb-3 flex items-start justify-between gap-3">
-                  <div>
-                    <p className="text-sm font-semibold text-[#4A3F35] dark:text-[#FDF8F5]">
-                      {flightSegmentKey === 'arrival' ? '去程航班設定' : '回程航班設定'}
-                    </p>
-                  </div>
-                  <div className="flex gap-2">
-                    <button
-                      type="button"
-                      onClick={() => clearFlightSegment(flightSegmentKey)}
-                      aria-label="清空航班資訊"
-                      title="清空航班資訊"
-                      className="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-[#E8DCC4] text-[#8C7A6B] transition hover:border-[#D9A0A5] hover:text-[#6B5B4D] dark:border-[#5C4D42] dark:text-[#A89F91] dark:hover:border-[#9EBA9E] dark:hover:text-[#D1C4B5]"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </button>
-                    <button
-                      type="button"
-                      onClick={applyFlightInfo}
-                      aria-label="儲存航班資訊"
-                      title="儲存航班資訊"
-                      className="inline-flex h-9 w-9 items-center justify-center rounded-xl bg-[#D9A0A5] text-white transition hover:bg-[#C88992] dark:bg-[#7A907A] dark:hover:bg-[#6A816A]"
-                    >
-                      <Save className="h-4 w-4" />
-                    </button>
                   </div>
                 </div>
 
-                <div className="grid gap-3 sm:grid-cols-2">
-                  <input
-                    type="text"
-                    value={flightInfoDraft[flightSegmentKey].airline}
-                    onChange={(event) => updateFlightDraft(flightSegmentKey, 'airline', event.target.value)}
-                    placeholder="航空公司"
-                    className={flightTextInputClassName}
-                  />
-                  <input
-                    type="text"
-                    value={flightInfoDraft[flightSegmentKey].flightNumber}
-                    onChange={(event) => updateFlightDraft(flightSegmentKey, 'flightNumber', event.target.value)}
-                    placeholder="航班編號"
-                    className={flightTextInputClassName}
-                  />
-                  <input
-                    type="text"
-                    value={flightInfoDraft[flightSegmentKey].departureAirport}
-                    onChange={(event) => updateFlightDraft(flightSegmentKey, 'departureAirport', event.target.value)}
-                    placeholder="出發機場"
-                    className={flightTextInputClassName}
-                  />
-                  <input
-                    type="text"
-                    value={flightInfoDraft[flightSegmentKey].arrivalAirport}
-                    onChange={(event) => updateFlightDraft(flightSegmentKey, 'arrivalAirport', event.target.value)}
-                    placeholder="抵達機場"
-                    className={flightTextInputClassName}
-                  />
-                  <div className={flightDateTimeFieldClassName}>
-                    <input
-                      type="datetime-local"
-                      value={flightInfoDraft[flightSegmentKey].departureTime}
-                      onChange={(event) => updateFlightDraft(flightSegmentKey, 'departureTime', event.target.value)}
-                      className={flightDateTimeInputClassName}
-                    />
+                {flightSegmentKey && flightSegment && renderFlightSummaryCard(item.day, flightSegment, flightSegmentKey, true)}
+
+                {flightSegmentKey && activeFlightEditor === flightSegmentKey && (
+                  <div
+                    className="rounded-xl border border-[#E8DCC4] bg-[#FAF5F0] p-3 dark:border-[#5C4D42] dark:bg-[#2A2421]"
+                    onClick={(event) => event.stopPropagation()}
+                    onKeyDown={(event) => event.stopPropagation()}
+                  >
+                    <div className="mb-3 flex items-start justify-between gap-3">
+                      <div>
+                        <p className="text-sm font-semibold text-[#4A3F35] dark:text-[#FDF8F5]">
+                          {flightSegmentKey === 'arrival' ? '去程航班設定' : '回程航班設定'}
+                        </p>
+                      </div>
+                      <div className="flex gap-2">
+                        <button
+                          type="button"
+                          onClick={() => clearFlightSegment(flightSegmentKey)}
+                          aria-label="清空航班資訊"
+                          title="清空航班資訊"
+                          className="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-[#E8DCC4] text-[#8C7A6B] transition hover:border-[#D9A0A5] hover:text-[#6B5B4D] dark:border-[#5C4D42] dark:text-[#A89F91] dark:hover:border-[#9EBA9E] dark:hover:text-[#D1C4B5]"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={applyFlightInfo}
+                          aria-label="儲存航班資訊"
+                          title="儲存航班資訊"
+                          className="inline-flex h-9 w-9 items-center justify-center rounded-xl bg-[#D9A0A5] text-white transition hover:bg-[#C88992] dark:bg-[#7A907A] dark:hover:bg-[#6A816A]"
+                        >
+                          <Save className="h-4 w-4" />
+                        </button>
+                      </div>
+                    </div>
+
+                    <div className="grid gap-3 sm:grid-cols-2">
+                      <input
+                        type="text"
+                        value={flightInfoDraft[flightSegmentKey].airline}
+                        onChange={(event) => updateFlightDraft(flightSegmentKey, 'airline', event.target.value)}
+                        placeholder="航空公司"
+                        className={flightTextInputClassName}
+                      />
+                      <input
+                        type="text"
+                        value={flightInfoDraft[flightSegmentKey].flightNumber}
+                        onChange={(event) => updateFlightDraft(flightSegmentKey, 'flightNumber', event.target.value)}
+                        placeholder="航班編號"
+                        className={flightTextInputClassName}
+                      />
+                      <input
+                        type="text"
+                        value={flightInfoDraft[flightSegmentKey].departureAirport}
+                        onChange={(event) => updateFlightDraft(flightSegmentKey, 'departureAirport', event.target.value)}
+                        placeholder="出發機場"
+                        className={flightTextInputClassName}
+                      />
+                      <input
+                        type="text"
+                        value={flightInfoDraft[flightSegmentKey].arrivalAirport}
+                        onChange={(event) => updateFlightDraft(flightSegmentKey, 'arrivalAirport', event.target.value)}
+                        placeholder="抵達機場"
+                        className={flightTextInputClassName}
+                      />
+                      <div className={flightDateTimeFieldClassName}>
+                        <input
+                          type="datetime-local"
+                          value={flightInfoDraft[flightSegmentKey].departureTime}
+                          onChange={(event) => updateFlightDraft(flightSegmentKey, 'departureTime', event.target.value)}
+                          className={flightDateTimeInputClassName}
+                        />
+                      </div>
+                      <div className={flightDateTimeFieldClassName}>
+                        <input
+                          type="datetime-local"
+                          value={flightInfoDraft[flightSegmentKey].arrivalTime}
+                          onChange={(event) => updateFlightDraft(flightSegmentKey, 'arrivalTime', event.target.value)}
+                          className={flightDateTimeInputClassName}
+                        />
+                      </div>
+                      <input
+                        type="text"
+                        value={flightInfoDraft[flightSegmentKey].terminal}
+                        onChange={(event) => updateFlightDraft(flightSegmentKey, 'terminal', event.target.value)}
+                        placeholder="航廈 / 櫃位備註"
+                        className={`${flightTextInputClassName} sm:col-span-2`}
+                      />
+                      <textarea
+                        value={flightInfoDraft[flightSegmentKey].note}
+                        onChange={(event) => updateFlightDraft(flightSegmentKey, 'note', event.target.value)}
+                        placeholder="備註"
+                        rows={2}
+                        className={`${flightTextInputClassName} sm:col-span-2`}
+                      />
+                    </div>
                   </div>
-                  <div className={flightDateTimeFieldClassName}>
-                    <input
-                      type="datetime-local"
-                      value={flightInfoDraft[flightSegmentKey].arrivalTime}
-                      onChange={(event) => updateFlightDraft(flightSegmentKey, 'arrivalTime', event.target.value)}
-                      className={flightDateTimeInputClassName}
-                    />
-                  </div>
-                  <input
-                    type="text"
-                    value={flightInfoDraft[flightSegmentKey].terminal}
-                    onChange={(event) => updateFlightDraft(flightSegmentKey, 'terminal', event.target.value)}
-                    placeholder="航廈 / 櫃位備註"
-                    className={`${flightTextInputClassName} sm:col-span-2`}
-                  />
-                  <textarea
-                    value={flightInfoDraft[flightSegmentKey].note}
-                    onChange={(event) => updateFlightDraft(flightSegmentKey, 'note', event.target.value)}
-                    placeholder="備註"
-                    rows={2}
-                    className={`${flightTextInputClassName} sm:col-span-2`}
-                  />
-                </div>
+                )}
+
+                {renderSavedItineraryNote(item.day)}
+
+                {isNoteEditorOpen && renderItineraryNoteEditor(item.day, true)}
               </div>
+            </div>
           )}
-
-          {isExpanded && renderSavedItineraryNote(item.day)}
-
-          {isExpanded && isNoteEditorOpen && renderItineraryNoteEditor(item.day, true)}
+        </div>
         </div>
       );
     }
@@ -886,7 +898,11 @@ export default function App() {
               {flightSegmentKey && flightSegment && renderFlightSummaryCard(item.day, flightSegment, flightSegmentKey)}
 
               {flightSegmentKey && activeFlightEditor === flightSegmentKey && (
-                <div className="rounded-xl border border-[#E8DCC4] bg-[#FAF5F0] p-3 dark:border-[#5C4D42] dark:bg-[#2A2421]">
+                <div
+                  className="rounded-xl border border-[#E8DCC4] bg-[#FAF5F0] p-3 dark:border-[#5C4D42] dark:bg-[#2A2421]"
+                  onClick={(event) => event.stopPropagation()}
+                  onKeyDown={(event) => event.stopPropagation()}
+                >
                   <div className="mb-3 flex items-start justify-between gap-3">
                     <div>
                       <p className="text-sm font-semibold text-[#4A3F35] dark:text-[#FDF8F5]">
