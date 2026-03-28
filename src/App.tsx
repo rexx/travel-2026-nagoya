@@ -951,14 +951,6 @@ export default function App() {
         <div className="rounded-[28px] border border-[#F0E5E1] bg-white p-5 shadow-sm dark:border-[#4A3F35] dark:bg-[#362F2B]">
           <h3 className="text-lg font-bold text-[#4A3F35] dark:text-[#FDF8F5] font-serif">當日行程</h3>
           <div className="mt-5 space-y-4">
-            <div className="rounded-2xl border border-[#F0E5E1] bg-[#FDF8F5] p-4 dark:border-[#4A3F35] dark:bg-[#2A2421]">
-              <div className="flex items-center gap-2 text-sm font-semibold text-[#4A3F35] dark:text-[#FDF8F5]">
-                <CalendarDays className="h-4 w-4 text-[#A89F91] dark:text-[#8C7A6B]" />
-                早餐
-              </div>
-              <p className="mt-2 text-sm leading-6 text-[#6B5B4D] dark:text-[#D1C4B5]">{detail.breakfast}</p>
-            </div>
-
             {detail.timeline.map((timelineItem) => (
               <div
                 key={`${detail.day}-${timelineItem.time}-${timelineItem.activity}`}
