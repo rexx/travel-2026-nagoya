@@ -1308,13 +1308,7 @@ export default function App() {
                       </span>
                     </div>
 
-                    <div className="flex flex-wrap gap-1.5 mb-3">
-                      <span className="inline-flex items-center gap-1 text-[10px] bg-[#FAF5F0] dark:bg-[#4A3F35]/50 border border-[#F0E5E1] dark:border-[#5C4D42] text-[#6B5B4D] dark:text-[#D1C4B5] px-1.5 py-0.5 rounded">
-                        <CloudRain className="w-3 h-3" /> {item.rainFriendly.split(' ')[0]}
-                      </span>
-                    </div>
-                    
-                    <div className="space-y-2">
+                    <div className="space-y-2 mt-3">
                       <div className="flex items-start gap-2 text-xs text-[#6B5B4D] dark:text-[#D1C4B5]">
                         <MapPin className="w-3.5 h-3.5 text-[#A89F91] dark:text-[#8C7A6B] shrink-0 mt-0.5" />
                         <span className="leading-snug">{item.location} ({item.transport})</span>
@@ -1330,6 +1324,10 @@ export default function App() {
                     </div>
 
                     <div className="mt-3 pt-3 border-t border-[#F0E5E1] dark:border-[#4A3F35] space-y-2">
+                      <p className="text-xs text-[#8C7A6B] dark:text-[#A89F91] flex items-start gap-1.5">
+                        <CloudRain className="w-3.5 h-3.5 text-[#A89F91] dark:text-[#8C7A6B] shrink-0" />
+                        <span className="leading-snug">雨天：{item.rainFriendly}</span>
+                      </p>
                       <p className="text-xs text-[#8C7A6B] dark:text-[#A89F91] flex items-start gap-1.5">
                         <CalendarDays className="w-3.5 h-3.5 text-[#A89F91] dark:text-[#8C7A6B] shrink-0" />
                         <span className="leading-snug">假日：{item.weekendFriendly}</span>
