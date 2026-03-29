@@ -772,7 +772,7 @@ export default function App() {
               type="button"
               onClick={() => toggleItineraryExpanded(item.day)}
               aria-label={`${isExpanded ? '收合' : '展開'} ${item.day} 行程摘要`}
-              className="block w-full rounded-xl px-0 py-0 text-left transition hover:bg-[#FAF5F0] hover:px-3 hover:py-2 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#D9A0A5]/30 dark:hover:bg-[#2A2421] dark:focus-visible:ring-[#E2C07C]/30"
+              className="block w-full rounded-xl text-left transition-colors hover:bg-[#FAF5F0] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#D9A0A5]/30 dark:hover:bg-[#2A2421] dark:focus-visible:ring-[#E2C07C]/30"
             >
               <div className="grid grid-cols-[auto_auto_minmax(0,1fr)_auto] items-center gap-x-2 text-xs">
                 <div className="whitespace-nowrap text-sm font-semibold text-[#4A3F35] dark:text-[#FDF8F5]">
@@ -797,7 +797,7 @@ export default function App() {
                 <button
                   type="button"
                   onClick={() => openItineraryDetail(item.day)}
-                  className="flex w-full items-start gap-2 rounded-xl text-left text-sm text-[#6B5B4D] transition hover:bg-[#FAF5F0] hover:px-3 hover:py-2 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#D9A0A5]/30 dark:text-[#D1C4B5] dark:hover:bg-[#2A2421] dark:focus-visible:ring-[#E2C07C]/30"
+                  className="flex w-full items-start gap-2 rounded-xl text-left text-sm text-[#6B5B4D] transition-colors hover:bg-[#FAF5F0] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#D9A0A5]/30 dark:text-[#D1C4B5] dark:hover:bg-[#2A2421] dark:focus-visible:ring-[#E2C07C]/30"
                   aria-label={`查看 ${item.day} 當日細節`}
                 >
                   <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-[#A89F91] dark:text-[#8C7A6B]" />
