@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { CalendarDays, UtensilsCrossed, Map, MapPin, Clock, Banknote, Info, Pencil, CloudRain, AlertCircle, CheckCircle2, BedDouble, Sun, Moon, CreditCard, Smartphone, MapPinned, Settings2, X, PlaneTakeoff, PlaneLanding, Trash2, Save, LayoutGrid, List, ChevronDown, WifiOff, ExternalLink, ArrowLeft, ChevronLeft, ChevronRight } from 'lucide-react';
+import { CalendarDays, CalendarCheck, UtensilsCrossed, Map, MapPin, Clock, Banknote, Info, Pencil, CloudRain, AlertCircle, CheckCircle2, BedDouble, Sun, Moon, CreditCard, Smartphone, MapPinned, Settings2, X, PlaneTakeoff, PlaneLanding, Trash2, Save, LayoutGrid, List, ChevronDown, WifiOff, ExternalLink, ArrowLeft, ChevronLeft, ChevronRight } from 'lucide-react';
 import { itineraryData, itineraryDetailMap, foodData, attractionData, creditCardData, promoData, ePayData } from './data';
 import { motion, AnimatePresence } from 'motion/react';
 import { AttractionItem, FoodItem, ItineraryDetail, ItineraryItem } from './types';
@@ -1215,8 +1215,8 @@ export default function App() {
                         <span>{item.notes}</span>
                       </p>
                       <p className="text-xs font-medium text-[#6B5B4D] dark:text-[#D1C4B5] flex items-center gap-1.5 mt-1">
-                        <span className={`w-2 h-2 rounded-full ${item.reservation.includes('❌') ? 'bg-[#D1C4B5] dark:bg-[#6B5B4D]' : 'bg-amber-400 dark:bg-[#C5A059]'}`}></span>
-                        {item.reservation}
+                        <CalendarCheck className="w-3.5 h-3.5 shrink-0 text-[#A89F91] dark:text-[#8C7A6B]" />
+                        <span>{item.reservation}</span>
                       </p>
                     </div>
                   </button>
