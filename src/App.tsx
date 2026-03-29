@@ -6,7 +6,6 @@ import { AttractionItem, FoodItem, ItineraryDetail, ItineraryItem } from './type
 
 type Tab = 'itinerary' | 'food' | 'attractions' | 'cards' | 'map';
 type ItineraryViewMode = 'card' | 'list';
-type ItineraryDetailPage = 'summary' | 'guide';
 type AttractionConditionKey = 'rain' | 'weekend';
 
 const MAP_EMBED_URL_STORAGE_KEY = 'nagoya-map-embed-url';
@@ -255,7 +254,7 @@ export default function App() {
   const [itineraryViewMode, setItineraryViewMode] = useState<ItineraryViewMode>('card');
   const [expandedItineraryDays, setExpandedItineraryDays] = useState<string[]>([]);
   const [activeItineraryDay, setActiveItineraryDay] = useState<string | null>(null);
-  const [activeItineraryDetailPage, setActiveItineraryDetailPage] = useState<ItineraryDetailPage>('summary');
+  const [expandedTimelineItems, setExpandedTimelineItems] = useState<string[]>([]);
   const [foodCategoryFilter, setFoodCategoryFilter] = useState(ALL_FILTER_LABEL);
   const [attractionCategoryFilter, setAttractionCategoryFilter] = useState(ALL_FILTER_LABEL);
   const [attractionConditionFilters, setAttractionConditionFilters] = useState<AttractionConditionKey[]>([]);
@@ -507,22 +506,30 @@ export default function App() {
 
   const openItineraryDetail = (day: string) => {
     setActiveItineraryDay(day);
-    setActiveItineraryDetailPage('summary');
+    setExpandedTimelineItems([]);
     setActiveItineraryNoteEditor(null);
     setActiveFlightEditor(null);
   };
 
   const closeItineraryDetail = () => {
     setActiveItineraryDay(null);
-    setActiveItineraryDetailPage('summary');
+    setExpandedTimelineItems([]);
     setActiveItineraryNoteEditor(null);
   };
 
   const navigateItineraryDetail = (day: string) => {
     setActiveItineraryDay(day);
-    setActiveItineraryDetailPage('summary');
+    setExpandedTimelineItems([]);
     setActiveItineraryNoteEditor(null);
     setActiveFlightEditor(null);
+  };
+
+  const toggleTimelineItemDetails = (itemKey: string) => {
+    setExpandedTimelineItems((current) =>
+      current.includes(itemKey)
+        ? current.filter((key) => key !== itemKey)
+        : [...current, itemKey],
+    );
   };
 
   const toggleItineraryExpanded = (day: string) => {
@@ -900,11 +907,6 @@ export default function App() {
           ? 'departure'
           : null;
     const isNoteEditorOpen = activeItineraryNoteEditor === detail.day;
-    const hasGuidePage = Boolean(detail.guide?.timeline.length);
-    const isGuidePage = hasGuidePage && activeItineraryDetailPage === 'guide';
-    const activeTimeline = isGuidePage ? detail.guide?.timeline ?? detail.timeline : detail.timeline;
-    const sectionTitle = isGuidePage ? detail.guide?.title ?? '詳細攻略' : '當日行程';
-    const sectionIntro = isGuidePage ? detail.guide?.intro : null;
 
     return (
       <div className="space-y-4">
@@ -959,69 +961,75 @@ export default function App() {
         </div>
 
         <div className="rounded-[28px] border border-[#F0E5E1] bg-white p-5 shadow-sm dark:border-[#4A3F35] dark:bg-[#362F2B]">
-          <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-            <div>
-              <h3 className="text-lg font-bold text-[#4A3F35] dark:text-[#FDF8F5] font-serif">{sectionTitle}</h3>
-              {sectionIntro ? (
-                <p className="mt-2 text-sm leading-7 text-[#6B5B4D] dark:text-[#D1C4B5]">{sectionIntro}</p>
-              ) : null}
-            </div>
-
-            {hasGuidePage ? (
-              <div className="inline-flex shrink-0 rounded-2xl border border-[#E8DCC4] bg-[#FAF5F0] p-1 dark:border-[#5C4D42] dark:bg-[#2A2421]">
-                <button
-                  type="button"
-                  onClick={() => setActiveItineraryDetailPage('summary')}
-                  className={`rounded-xl px-3 py-1.5 text-sm font-medium transition ${
-                    !isGuidePage
-                      ? 'bg-white text-[#4A3F35] shadow-sm dark:bg-[#362F2B] dark:text-[#FDF8F5]'
-                      : 'text-[#8C7A6B] hover:text-[#6B5B4D] dark:text-[#A89F91] dark:hover:text-[#FDF8F5]'
-                  }`}
-                >
-                  摘要
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setActiveItineraryDetailPage('guide')}
-                  className={`rounded-xl px-3 py-1.5 text-sm font-medium transition ${
-                    isGuidePage
-                      ? 'bg-white text-[#4A3F35] shadow-sm dark:bg-[#362F2B] dark:text-[#FDF8F5]'
-                      : 'text-[#8C7A6B] hover:text-[#6B5B4D] dark:text-[#A89F91] dark:hover:text-[#FDF8F5]'
-                  }`}
-                >
-                  詳細
-                </button>
-              </div>
-            ) : null}
-          </div>
+          <h3 className="text-lg font-bold text-[#4A3F35] dark:text-[#FDF8F5] font-serif">當日行程</h3>
 
           <div className="mt-5 space-y-4">
-            {activeTimeline.map((timelineItem) => (
-              <div
-                key={`${detail.day}-${timelineItem.time}-${timelineItem.activity}`}
-                className="grid gap-3 border-l-2 border-[#F0E5E1] pl-4 dark:border-[#4A3F35]"
-              >
-                <div className="text-xs font-semibold uppercase tracking-[0.18em] text-[#D9A0A5] dark:text-[#E2C07C]">
-                  {timelineItem.time}
-                </div>
-                <div className="space-y-2">
-                  <p className="text-sm font-semibold leading-6 text-[#4A3F35] dark:text-[#FDF8F5]">{timelineItem.activity}</p>
-                  {timelineItem.note && (
-                    <p className="text-sm leading-6 text-[#6B5B4D] dark:text-[#D1C4B5]">{timelineItem.note}</p>
-                  )}
-                </div>
-              </div>
-            ))}
+            {detail.timeline.map((timelineItem) => {
+              const itemKey = `${detail.day}-${timelineItem.time}-${timelineItem.activity}`;
+              const hasDetails = Boolean(timelineItem.details?.length);
+              const isExpanded = expandedTimelineItems.includes(itemKey);
 
-            {!isGuidePage ? (
-              <div className="border-t border-dashed border-[#F0E5E1] pt-4 dark:border-[#4A3F35]">
-                <div className="flex items-center gap-2 text-sm font-semibold text-[#4A3F35] dark:text-[#FDF8F5]">
-                  <BedDouble className="h-4 w-4 text-[#A89F91] dark:text-[#8C7A6B]" />
-                  住宿
+              return (
+                <div
+                  key={itemKey}
+                  className="grid gap-3 border-l-2 border-[#F0E5E1] pl-4 dark:border-[#4A3F35]"
+                >
+                  <div className="text-xs font-semibold uppercase tracking-[0.18em] text-[#D9A0A5] dark:text-[#E2C07C]">
+                    {timelineItem.time}
+                  </div>
+                  <div className="space-y-2">
+                    <p className="text-sm font-semibold leading-6 text-[#4A3F35] dark:text-[#FDF8F5]">{timelineItem.activity}</p>
+                    {timelineItem.note && (
+                      <p className="text-sm leading-6 text-[#6B5B4D] dark:text-[#D1C4B5]">{timelineItem.note}</p>
+                    )}
+
+                    {hasDetails ? (
+                      <div className="rounded-2xl border border-[#E8DCC4] bg-[#FAF5F0] p-3 dark:border-[#5C4D42] dark:bg-[#2A2421]">
+                        <button
+                          type="button"
+                          onClick={() => toggleTimelineItemDetails(itemKey)}
+                          className="flex w-full items-center justify-between gap-3 rounded-xl px-1 py-1 text-left text-sm font-medium text-[#6B5B4D] transition hover:text-[#4A3F35] dark:text-[#D1C4B5] dark:hover:text-[#FDF8F5]"
+                        >
+                          <span>{isExpanded ? '收合詳細攻略' : '展開詳細攻略'}</span>
+                          <ChevronDown className={`h-4 w-4 shrink-0 transition ${isExpanded ? 'rotate-180' : ''}`} />
+                        </button>
+
+                        {isExpanded ? (
+                          <div className="mt-3 space-y-3">
+                            {timelineItem.details?.map((detailItem) => (
+                              <div
+                                key={`${itemKey}-${detailItem.time}-${detailItem.activity}`}
+                                className="grid gap-2 border-l-2 border-[#E8DCC4] pl-3 dark:border-[#5C4D42]"
+                              >
+                                <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#D9A0A5] dark:text-[#E2C07C]">
+                                  {detailItem.time}
+                                </p>
+                                <p className="text-sm font-semibold leading-6 text-[#4A3F35] dark:text-[#FDF8F5]">
+                                  {detailItem.activity}
+                                </p>
+                                {detailItem.note ? (
+                                  <p className="text-sm leading-6 text-[#6B5B4D] dark:text-[#D1C4B5]">
+                                    {detailItem.note}
+                                  </p>
+                                ) : null}
+                              </div>
+                            ))}
+                          </div>
+                        ) : null}
+                      </div>
+                    ) : null}
+                  </div>
                 </div>
-                <p className="mt-2 text-sm leading-6 text-[#6B5B4D] dark:text-[#D1C4B5]">{detail.hotel}</p>
+              );
+            })}
+
+            <div className="border-t border-dashed border-[#F0E5E1] pt-4 dark:border-[#4A3F35]">
+              <div className="flex items-center gap-2 text-sm font-semibold text-[#4A3F35] dark:text-[#FDF8F5]">
+                <BedDouble className="h-4 w-4 text-[#A89F91] dark:text-[#8C7A6B]" />
+                住宿
               </div>
-            ) : null}
+              <p className="mt-2 text-sm leading-6 text-[#6B5B4D] dark:text-[#D1C4B5]">{detail.hotel}</p>
+            </div>
           </div>
         </div>
 
