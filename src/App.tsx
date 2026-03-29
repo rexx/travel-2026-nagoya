@@ -6,6 +6,7 @@ import { AttractionItem, FoodItem, ItineraryDetail, ItineraryItem } from './type
 
 type Tab = 'itinerary' | 'food' | 'attractions' | 'cards' | 'map';
 type ItineraryViewMode = 'card' | 'list';
+type ItineraryDetailPage = 'summary' | 'guide';
 type AttractionConditionKey = 'rain' | 'weekend';
 
 const MAP_EMBED_URL_STORAGE_KEY = 'nagoya-map-embed-url';
@@ -254,6 +255,7 @@ export default function App() {
   const [itineraryViewMode, setItineraryViewMode] = useState<ItineraryViewMode>('card');
   const [expandedItineraryDays, setExpandedItineraryDays] = useState<string[]>([]);
   const [activeItineraryDay, setActiveItineraryDay] = useState<string | null>(null);
+  const [activeItineraryDetailPage, setActiveItineraryDetailPage] = useState<ItineraryDetailPage>('summary');
   const [foodCategoryFilter, setFoodCategoryFilter] = useState(ALL_FILTER_LABEL);
   const [attractionCategoryFilter, setAttractionCategoryFilter] = useState(ALL_FILTER_LABEL);
   const [attractionConditionFilters, setAttractionConditionFilters] = useState<AttractionConditionKey[]>([]);
@@ -505,17 +507,20 @@ export default function App() {
 
   const openItineraryDetail = (day: string) => {
     setActiveItineraryDay(day);
+    setActiveItineraryDetailPage('summary');
     setActiveItineraryNoteEditor(null);
     setActiveFlightEditor(null);
   };
 
   const closeItineraryDetail = () => {
     setActiveItineraryDay(null);
+    setActiveItineraryDetailPage('summary');
     setActiveItineraryNoteEditor(null);
   };
 
   const navigateItineraryDetail = (day: string) => {
     setActiveItineraryDay(day);
+    setActiveItineraryDetailPage('summary');
     setActiveItineraryNoteEditor(null);
     setActiveFlightEditor(null);
   };
@@ -895,6 +900,11 @@ export default function App() {
           ? 'departure'
           : null;
     const isNoteEditorOpen = activeItineraryNoteEditor === detail.day;
+    const hasGuidePage = Boolean(detail.guide?.timeline.length);
+    const isGuidePage = hasGuidePage && activeItineraryDetailPage === 'guide';
+    const activeTimeline = isGuidePage ? detail.guide?.timeline ?? detail.timeline : detail.timeline;
+    const sectionTitle = isGuidePage ? detail.guide?.title ?? '詳細攻略' : '當日行程';
+    const sectionIntro = isGuidePage ? detail.guide?.intro : null;
 
     return (
       <div className="space-y-4">
@@ -949,9 +959,44 @@ export default function App() {
         </div>
 
         <div className="rounded-[28px] border border-[#F0E5E1] bg-white p-5 shadow-sm dark:border-[#4A3F35] dark:bg-[#362F2B]">
-          <h3 className="text-lg font-bold text-[#4A3F35] dark:text-[#FDF8F5] font-serif">當日行程</h3>
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+            <div>
+              <h3 className="text-lg font-bold text-[#4A3F35] dark:text-[#FDF8F5] font-serif">{sectionTitle}</h3>
+              {sectionIntro ? (
+                <p className="mt-2 text-sm leading-7 text-[#6B5B4D] dark:text-[#D1C4B5]">{sectionIntro}</p>
+              ) : null}
+            </div>
+
+            {hasGuidePage ? (
+              <div className="inline-flex shrink-0 rounded-2xl border border-[#E8DCC4] bg-[#FAF5F0] p-1 dark:border-[#5C4D42] dark:bg-[#2A2421]">
+                <button
+                  type="button"
+                  onClick={() => setActiveItineraryDetailPage('summary')}
+                  className={`rounded-xl px-3 py-1.5 text-sm font-medium transition ${
+                    !isGuidePage
+                      ? 'bg-white text-[#4A3F35] shadow-sm dark:bg-[#362F2B] dark:text-[#FDF8F5]'
+                      : 'text-[#8C7A6B] hover:text-[#6B5B4D] dark:text-[#A89F91] dark:hover:text-[#FDF8F5]'
+                  }`}
+                >
+                  摘要
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setActiveItineraryDetailPage('guide')}
+                  className={`rounded-xl px-3 py-1.5 text-sm font-medium transition ${
+                    isGuidePage
+                      ? 'bg-white text-[#4A3F35] shadow-sm dark:bg-[#362F2B] dark:text-[#FDF8F5]'
+                      : 'text-[#8C7A6B] hover:text-[#6B5B4D] dark:text-[#A89F91] dark:hover:text-[#FDF8F5]'
+                  }`}
+                >
+                  詳細
+                </button>
+              </div>
+            ) : null}
+          </div>
+
           <div className="mt-5 space-y-4">
-            {detail.timeline.map((timelineItem) => (
+            {activeTimeline.map((timelineItem) => (
               <div
                 key={`${detail.day}-${timelineItem.time}-${timelineItem.activity}`}
                 className="grid gap-3 border-l-2 border-[#F0E5E1] pl-4 dark:border-[#4A3F35]"
@@ -968,13 +1013,15 @@ export default function App() {
               </div>
             ))}
 
-            <div className="border-t border-dashed border-[#F0E5E1] pt-4 dark:border-[#4A3F35]">
-              <div className="flex items-center gap-2 text-sm font-semibold text-[#4A3F35] dark:text-[#FDF8F5]">
-                <BedDouble className="h-4 w-4 text-[#A89F91] dark:text-[#8C7A6B]" />
-                住宿
+            {!isGuidePage ? (
+              <div className="border-t border-dashed border-[#F0E5E1] pt-4 dark:border-[#4A3F35]">
+                <div className="flex items-center gap-2 text-sm font-semibold text-[#4A3F35] dark:text-[#FDF8F5]">
+                  <BedDouble className="h-4 w-4 text-[#A89F91] dark:text-[#8C7A6B]" />
+                  住宿
+                </div>
+                <p className="mt-2 text-sm leading-6 text-[#6B5B4D] dark:text-[#D1C4B5]">{detail.hotel}</p>
               </div>
-              <p className="mt-2 text-sm leading-6 text-[#6B5B4D] dark:text-[#D1C4B5]">{detail.hotel}</p>
-            </div>
+            ) : null}
           </div>
         </div>
 

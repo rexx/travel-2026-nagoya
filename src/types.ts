@@ -16,6 +16,12 @@ export interface ItineraryTimelineItem {
   note?: string;
 }
 
+export interface ItineraryGuide {
+  title: string;
+  intro?: string;
+  timeline: ItineraryTimelineItem[];
+}
+
 export interface ItineraryDetail {
   day: string;
   slug: string;
@@ -28,6 +34,7 @@ export interface ItineraryDetail {
   breakfast: string;
   status?: string;
   timeline: ItineraryTimelineItem[];
+  guide?: ItineraryGuide;
   rainPlan?: string;
   transport?: string[];
   tips?: string[];
