@@ -954,7 +954,7 @@ export default function App() {
             {detail.timeline.map((timelineItem) => (
               <div
                 key={`${detail.day}-${timelineItem.time}-${timelineItem.activity}`}
-                className="grid gap-3 rounded-2xl border border-[#F0E5E1] bg-[#FDF8F5] p-4 dark:border-[#4A3F35] dark:bg-[#2A2421]"
+                className="grid gap-3 border-l-2 border-[#F0E5E1] pl-4 dark:border-[#4A3F35]"
               >
                 <div className="text-xs font-semibold uppercase tracking-[0.18em] text-[#D9A0A5] dark:text-[#E2C07C]">
                   {timelineItem.time}
@@ -968,7 +968,7 @@ export default function App() {
               </div>
             ))}
 
-            <div className="rounded-2xl border border-[#F0E5E1] bg-[#FDF8F5] p-4 dark:border-[#4A3F35] dark:bg-[#2A2421]">
+            <div className="border-t border-dashed border-[#F0E5E1] pt-4 dark:border-[#4A3F35]">
               <div className="flex items-center gap-2 text-sm font-semibold text-[#4A3F35] dark:text-[#FDF8F5]">
                 <BedDouble className="h-4 w-4 text-[#A89F91] dark:text-[#8C7A6B]" />
                 住宿
