@@ -39,7 +39,7 @@ export const itineraryDetailsData: ItineraryDetail[] = [
     status: '✅ 已訂',
     timeline: [
       { time: '晚上抵達', activity: '🛬 入境、提領行李、通關', note: '提前準備好 eSIM 或降落後馬上開通網路' },
-      { time: '入境後', activity: '🏪 機場超商買晚餐／宵夜', note: '¥500–1,000，Centrair 機場超商 24 小時' },
+      { time: '入境後', activity: '🍙 機場超商買晚餐／宵夜', note: '¥500–1,000，Centrair 機場超商 24 小時' },
       { time: '入境後', activity: '🚶 步行前往機場飯店 check-in', note: '機場飯店走路可達，不用拖著行李搭車' },
     ],
     tips: ['機場飯店入住前先在機場換一些日幣零錢，很多神社、小店不收刷卡。'],
@@ -257,10 +257,10 @@ export const itineraryDetailsData: ItineraryDetail[] = [
     theme: '🛍️ 榮商圈購物日＋飛驒牛午餐',
     intro: '今天純購物＋飛驒牛午餐，完全室內，天氣再差都不怕。',
     hotel: '榮飯店',
-    breakfast: '🏪 外食（Komeda 珈琲推薦）',
+    breakfast: '🥪 外食（Komeda 珈琲推薦）',
     status: '✅ 已訂',
     timeline: [
-      { time: '08:30–09:30', activity: '🏪 Komeda 珈琲或超商早餐', note: '今天不用趕，睡飽再出門' },
+      { time: '08:30–09:30', activity: '🥪 Komeda 珈琲或超商早餐', note: '今天不用趕，睡飽再出門' },
       { time: '10:00–12:00', activity: '🛍️ PARCO 百貨（矢場町站）：吉伊卡哇、潮牌、玩具', note: '10:00 開門，人少時搶先逛' },
       { time: '12:00–13:30', activity: '🥩 飛驒牛一頭家 馬喰一代 名古屋栄【已預約】', note: '✅ 大人 2 名＋小孩 1 名，用餐到 13:30，榮商圈步行可達' },
       { time: '13:30–15:30', activity: '🛍️ LACHIC＋松坂屋', note: 'LACHIC 11:00–21:00，女裝、雜貨豐富' },
@@ -280,10 +280,10 @@ export const itineraryDetailsData: ItineraryDetail[] = [
     theme: '🌳 吉卜力公園全天',
     intro: '今天依 4/23 最終版動線走：先在免費區找彩蛋，再依序進魔法之里、大倉庫與魔女之谷，把限量兌換券與熱門設施放前面。',
     hotel: '榮飯店',
-    breakfast: '🏪 外食（超商／咖啡廳）',
+    breakfast: '🥪 外食（超商／咖啡廳）',
     status: '✅ 已訂',
     timeline: [
-      { time: '07:30–08:15', activity: '🏪 早餐', note: '先吃超商或咖啡廳早餐，吃完直接出發前往吉卜力公園' },
+      { time: '07:30–08:15', activity: '🥪 早餐', note: '先吃超商或咖啡廳早餐，吃完直接出發前往吉卜力公園' },
       { time: '08:35–09:30', activity: '🚇 榮 → 藤丘 → 愛・地球博紀念公園', note: '搭地鐵東山線轉 Linimo，到站後步行約 10 分鐘進園區' },
       { time: '09:30–09:55', activity: '🏞️ 免費區域', note: '先在園區步道散步，找「吉卜力遺失物品」15 個隱藏彩蛋' },
       {
@@ -365,10 +365,10 @@ export const itineraryDetailsData: ItineraryDetail[] = [
     theme: '🛍️ 榮／大須最後巡禮＋移動機場',
     intro: '行李寄放榮飯店後輕裝出發，傍晚取行李移動機場，抵達後逛 FLIGHT OF DREAMS。',
     hotel: '機場飯店',
-    breakfast: '🏪 外食（超商／咖啡廳）',
+    breakfast: '🥪 外食（超商／咖啡廳）',
     status: '✅ 已訂',
     timeline: [
-      { time: '07:30–08:30', activity: '🏪 超商或咖啡廳早餐', note: '吃完回飯店整理行李準備寄放' },
+      { time: '07:30–08:30', activity: '🥪 超商或咖啡廳早餐', note: '吃完回飯店整理行李準備寄放' },
       { time: '09:00', activity: '🧳 榮飯店寄放行李', note: '輕裝出發，傍晚取行李' },
       { time: '09:30–12:00', activity: '🛍️ 榮商圈補貨：藥妝、唐吉訶德、扭蛋、三越', note: '昨天採購完伴手禮，今天買日用品和零食' },
       { time: '12:00–13:30', activity: '🍽️ 大須商店街午餐＋最後逛逛', note: '¥900–1,500，步行約 15 分，補買沒買到的東西' },
@@ -396,11 +396,10 @@ export const itineraryDetailsData: ItineraryDetail[] = [
     status: '✅ 已訂',
     timeline: [
       { time: '早起', activity: '🍳 機場飯店早餐後整理行李、確認護照票券', note: '建議航班起飛前 2.5 小時到達報到' },
-      { time: '出發前', activity: '🍱 機場 4F まるや本店 鰻魚飯（早午餐）', note: '¥2,000–3,500，名古屋最後一餐，鰻魚三吃：原味 → 加薬味 → 茶泡飯' },
       { time: '候機前', activity: '🛍️ 機場免稅店掃貨＋買天むす緋毬飯糰帶上飛機', note: '飯糰買來在飛機上吃超幸福' },
       { time: '登機時間', activity: '🛫 起飛！返台', note: '帶著滿滿回憶和行李返家 🏠' },
     ],
-    tips: ['回台前確認 manaca 卡餘額可在機場退費。', '藥妝、食品超過限額記得分裝托運。', '鰻魚飯建議在登機前吃完，不要帶上飛機。'],
+    tips: ['回台前確認 manaca 卡餘額可在機場退費。', '藥妝、食品超過限額記得分裝托運。'],
   },
 ];
 
