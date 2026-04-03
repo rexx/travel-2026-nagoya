@@ -37,6 +37,7 @@ export interface ItineraryDetail {
 export interface FoodItem {
   name: string;
   type: string;
+  categories: string[];
   location: string;
   mapQuery: string;
   mapCenter?: string;

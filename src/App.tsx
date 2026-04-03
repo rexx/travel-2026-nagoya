@@ -184,6 +184,11 @@ const getAttractionCategoryOptions = (items: Array<{ categories: string[] }>): s
   ...new Set(items.flatMap((item) => item.categories)),
 ];
 
+const getFoodCategoryOptions = (items: Array<{ categories: string[] }>): string[] => [
+  ALL_FILTER_LABEL,
+  ...new Set(items.flatMap((item) => item.categories)),
+];
+
 const isRecommendedForFilter = (value: string): boolean => value.includes('✅');
 
 const buildGoogleMapsEmbedUrl = (query: string, center?: string): string => {
@@ -265,12 +270,12 @@ export default function App() {
   const [attractionConditionFilters, setAttractionConditionFilters] = useState<AttractionConditionKey[]>([]);
   const [selectedMapTarget, setSelectedMapTarget] = useState<MapTarget | null>(null);
 
-  const foodCategoryOptions = getTypeCategoryOptions(foodData);
+  const foodCategoryOptions = getFoodCategoryOptions(foodData);
   const attractionCategoryOptions = getAttractionCategoryOptions(attractionData);
   const filteredFoodData = foodData.filter(
     (item) =>
       foodCategoryFilter === ALL_FILTER_LABEL ||
-      splitTypeCategories(item.type).includes(foodCategoryFilter),
+      item.categories.includes(foodCategoryFilter),
   );
   const filteredAttractionData = attractionData.filter((item) => {
     const matchesCategory =
