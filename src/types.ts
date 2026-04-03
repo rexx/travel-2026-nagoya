@@ -50,6 +50,7 @@ export interface FoodItem {
 export interface AttractionItem {
   name: string;
   type: string;
+  categories: string[];
   location: string;
   mapQuery: string;
   mapCenter?: string;

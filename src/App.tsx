@@ -174,9 +174,14 @@ const splitTypeCategories = (value: string): string[] =>
     .map((category) => category.trim())
     .filter(Boolean);
 
-const getCategoryOptions = (items: Array<{ type: string }>): string[] => [
+const getTypeCategoryOptions = (items: Array<{ type: string }>): string[] => [
   ALL_FILTER_LABEL,
   ...new Set(items.flatMap((item) => splitTypeCategories(item.type))),
+];
+
+const getAttractionCategoryOptions = (items: Array<{ categories: string[] }>): string[] => [
+  ALL_FILTER_LABEL,
+  ...new Set(items.flatMap((item) => item.categories)),
 ];
 
 const isRecommendedForFilter = (value: string): boolean => value.includes('✅');
@@ -260,8 +265,8 @@ export default function App() {
   const [attractionConditionFilters, setAttractionConditionFilters] = useState<AttractionConditionKey[]>([]);
   const [selectedMapTarget, setSelectedMapTarget] = useState<MapTarget | null>(null);
 
-  const foodCategoryOptions = getCategoryOptions(foodData);
-  const attractionCategoryOptions = getCategoryOptions(attractionData);
+  const foodCategoryOptions = getTypeCategoryOptions(foodData);
+  const attractionCategoryOptions = getAttractionCategoryOptions(attractionData);
   const filteredFoodData = foodData.filter(
     (item) =>
       foodCategoryFilter === ALL_FILTER_LABEL ||
@@ -270,7 +275,7 @@ export default function App() {
   const filteredAttractionData = attractionData.filter((item) => {
     const matchesCategory =
       attractionCategoryFilter === ALL_FILTER_LABEL ||
-      splitTypeCategories(item.type).includes(attractionCategoryFilter);
+      item.categories.includes(attractionCategoryFilter);
     const matchesConditions = attractionConditionFilters.every((condition) =>
       isRecommendedForFilter(condition === 'rain' ? item.rainFriendly : item.weekendFriendly),
     );
