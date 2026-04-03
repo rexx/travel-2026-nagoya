@@ -189,6 +189,19 @@ const getFoodCategoryOptions = (items: Array<{ categories: string[] }>): string[
   ...new Set(items.flatMap((item) => item.categories)),
 ];
 
+const escapeRegExp = (value: string): string =>
+  value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
+const buildSuggestedDayMatcher = (day: string): RegExp => {
+  const match = day.match(/Day\s*(\d+)/i);
+
+  if (!match) {
+    return new RegExp(escapeRegExp(day));
+  }
+
+  return new RegExp(`Day\\s*${match[1]}(?!\\d)`, 'i');
+};
+
 const isRecommendedForFilter = (value: string): boolean => value.includes('✅');
 
 const buildGoogleMapsEmbedUrl = (query: string, center?: string): string => {
@@ -296,6 +309,9 @@ export default function App() {
   const displayedMapUrl = selectedMapUrl || mapEmbedUrl.trim();
   const canRenderMapIframe = !isOffline && Boolean(displayedMapUrl);
   const activeItineraryDetail = activeItineraryDay ? itineraryDetailMap[activeItineraryDay] ?? null : null;
+  const activeItineraryFoodOptions = activeItineraryDay
+    ? foodData.filter((item) => buildSuggestedDayMatcher(activeItineraryDay).test(item.suggestedDay))
+    : [];
   const activeItineraryIndex = activeItineraryDay
     ? itineraryData.findIndex((item) => item.day === activeItineraryDay)
     : -1;
@@ -1043,8 +1059,8 @@ export default function App() {
           </div>
         </div>
 
-        {(detail.rainPlan || detail.transport?.length || detail.tips?.length) && (
-          <div className="grid gap-4 lg:grid-cols-3">
+        {(detail.rainPlan || detail.transport?.length || detail.tips?.length || activeItineraryFoodOptions.length > 0) && (
+          <div className="grid gap-4 lg:grid-cols-2">
             {detail.rainPlan && (
               <div className="rounded-[24px] border border-[#F0E5E1] bg-white p-5 shadow-sm dark:border-[#4A3F35] dark:bg-[#362F2B]">
                 <div className="flex items-center gap-2 text-sm font-semibold text-[#4A3F35] dark:text-[#FDF8F5]">
@@ -1083,6 +1099,26 @@ export default function App() {
                     <li key={tip} className="flex gap-2">
                       <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-[#D9A0A5] dark:bg-[#E2C07C]" />
                       <span>{tip}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ) : null}
+
+            {activeItineraryFoodOptions.length ? (
+              <div className="rounded-[24px] border border-[#F0E5E1] bg-white p-5 shadow-sm dark:border-[#4A3F35] dark:bg-[#362F2B]">
+                <div className="flex items-center gap-2 text-sm font-semibold text-[#4A3F35] dark:text-[#FDF8F5]">
+                  <UtensilsCrossed className="h-4 w-4 text-[#D9A0A5] dark:text-[#E2C07C]" />
+                  建議當日美食
+                </div>
+                <ul className="mt-3 space-y-3 text-sm leading-6 text-[#6B5B4D] dark:text-[#D1C4B5]">
+                  {activeItineraryFoodOptions.map((item) => (
+                    <li key={`${detail.day}-${item.name}`} className="flex gap-2">
+                      <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-[#D9A0A5] dark:bg-[#E2C07C]" />
+                      <div>
+                        <p className="font-medium text-[#4A3F35] dark:text-[#FDF8F5]">{item.name}</p>
+                        <p className="text-xs text-[#8C7A6B] dark:text-[#A89F91]">{item.type}・{item.location}</p>
+                      </div>
                     </li>
                   ))}
                 </ul>
