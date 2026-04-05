@@ -1,5 +1,5 @@
-import { useState, useEffect, useRef } from 'react';
-import { CalendarDays, CalendarCheck, UtensilsCrossed, Map, MapPin, Clock, Banknote, Info, Pencil, CloudRain, AlertCircle, CheckCircle2, BedDouble, Sun, Moon, CreditCard, Smartphone, MapPinned, Settings2, X, PlaneTakeoff, PlaneLanding, Trash2, Save, LayoutGrid, List, ChevronDown, WifiOff, ExternalLink, ArrowLeft, ChevronLeft, ChevronRight } from 'lucide-react';
+import { useState, useEffect, useRef, type ChangeEvent } from 'react';
+import { CalendarDays, CalendarCheck, UtensilsCrossed, Map, MapPin, Clock, Banknote, Info, Pencil, CloudRain, AlertCircle, CheckCircle2, BedDouble, Sun, Moon, CreditCard, Smartphone, MapPinned, Settings2, X, PlaneTakeoff, PlaneLanding, Trash2, Save, LayoutGrid, List, ChevronDown, WifiOff, ExternalLink, ArrowLeft, ChevronLeft, ChevronRight, Download, Upload } from 'lucide-react';
 import { itineraryData, itineraryDetailMap, foodData, attractionData, creditCardData, promoData, ePayData } from './data';
 import { motion, AnimatePresence } from 'motion/react';
 import { AttractionItem, FoodItem, ItineraryDetail, ItineraryItem } from './types';
@@ -11,6 +11,7 @@ type AttractionConditionKey = 'rain' | 'weekend';
 const MAP_EMBED_URL_STORAGE_KEY = 'nagoya-map-embed-url';
 const FLIGHT_INFO_STORAGE_KEY = 'nagoya-flight-info';
 const ITINERARY_NOTES_STORAGE_KEY = 'nagoya-itinerary-notes';
+const LOCAL_DATA_EXPORT_VERSION = 1;
 const GOOGLE_MAPS_EMBED_PLACEHOLDER = 'https://www.google.com/maps/d/embed?...';
 const ALL_FILTER_LABEL = '全部';
 const ATTRACTION_CONDITION_LABELS: Record<AttractionConditionKey, string> = {
@@ -63,6 +64,23 @@ interface MapTarget {
 }
 type ItineraryNotes = Record<string, string>;
 
+interface LocalDataPayload {
+  mapEmbedUrl: string;
+  flightInfo: FlightInfo;
+  itineraryNotes: ItineraryNotes;
+}
+
+interface LocalDataExportV1 {
+  version: typeof LOCAL_DATA_EXPORT_VERSION;
+  exportedAt: string;
+  data: LocalDataPayload;
+}
+
+interface ImportExportMessage {
+  type: 'success' | 'error';
+  text: string;
+}
+
 const createEmptyFlightSegment = (): FlightSegment => ({
   airline: '',
   flightNumber: '',
@@ -79,6 +97,9 @@ const createEmptyFlightInfo = (): FlightInfo => ({
   departure: createEmptyFlightSegment(),
 });
 
+const isRecord = (value: unknown): value is Record<string, unknown> =>
+  typeof value === 'object' && value !== null && !Array.isArray(value);
+
 const normalizeFlightSegment = (segment?: Partial<FlightSegment>): FlightSegment => ({
   airline: segment?.airline?.trim() ?? '',
   flightNumber: segment?.flightNumber?.trim() ?? '',
@@ -89,6 +110,42 @@ const normalizeFlightSegment = (segment?: Partial<FlightSegment>): FlightSegment
   terminal: segment?.terminal?.trim() ?? '',
   note: segment?.note?.trim() ?? '',
 });
+
+const normalizeFlightInfo = (value: unknown): FlightInfo => {
+  if (!isRecord(value)) {
+    return createEmptyFlightInfo();
+  }
+
+  return {
+    arrival: normalizeFlightSegment(isRecord(value.arrival) ? value.arrival as Partial<FlightSegment> : undefined),
+    departure: normalizeFlightSegment(isRecord(value.departure) ? value.departure as Partial<FlightSegment> : undefined),
+  };
+};
+
+const normalizeItineraryNotes = (value: unknown): ItineraryNotes => {
+  if (!isRecord(value)) {
+    return {};
+  }
+
+  return Object.fromEntries(
+    Object.entries(value).flatMap(([day, note]) => {
+      if (typeof note !== 'string') {
+        return [];
+      }
+
+      const normalizedNote = note.trim();
+      return normalizedNote ? [[day, normalizedNote]] : [];
+    }),
+  );
+};
+
+const readMapEmbedUrl = (): string => {
+  if (typeof window === 'undefined') {
+    return '';
+  }
+
+  return window.localStorage.getItem(MAP_EMBED_URL_STORAGE_KEY)?.trim() ?? '';
+};
 
 const loadFlightInfo = (): FlightInfo => {
   if (typeof window === 'undefined') {
@@ -102,12 +159,7 @@ const loadFlightInfo = (): FlightInfo => {
   }
 
   try {
-    const parsedFlightInfo = JSON.parse(rawFlightInfo) as Partial<FlightInfo>;
-
-    return {
-      arrival: normalizeFlightSegment(parsedFlightInfo.arrival),
-      departure: normalizeFlightSegment(parsedFlightInfo.departure),
-    };
+    return normalizeFlightInfo(JSON.parse(rawFlightInfo) as unknown);
   } catch {
     return createEmptyFlightInfo();
   }
@@ -127,19 +179,111 @@ const loadItineraryNotes = (): ItineraryNotes => {
   try {
     const parsedNotes = JSON.parse(rawNotes) as Record<string, unknown>;
 
-    return Object.fromEntries(
-      Object.entries(parsedNotes).flatMap(([day, note]) => {
-        if (typeof note !== 'string') {
-          return [];
-        }
-
-        const normalizedNote = note.trim();
-        return normalizedNote ? [[day, normalizedNote]] : [];
-      }),
-    );
+    return normalizeItineraryNotes(parsedNotes);
   } catch {
     return {};
   }
+};
+
+const createLocalDataPayload = (
+  mapEmbedUrl: string,
+  flightInfo: FlightInfo,
+  itineraryNotes: unknown,
+): LocalDataPayload => ({
+  mapEmbedUrl: mapEmbedUrl.trim(),
+  flightInfo: normalizeFlightInfo(flightInfo),
+  itineraryNotes: normalizeItineraryNotes(itineraryNotes),
+});
+
+const loadLocalDataPayload = (): LocalDataPayload =>
+  createLocalDataPayload(readMapEmbedUrl(), loadFlightInfo(), loadItineraryNotes());
+
+const persistMapEmbedUrl = (value: string) => {
+  if (typeof window === 'undefined') {
+    return;
+  }
+
+  const trimmedValue = value.trim();
+
+  if (trimmedValue) {
+    window.localStorage.setItem(MAP_EMBED_URL_STORAGE_KEY, trimmedValue);
+    return;
+  }
+
+  window.localStorage.removeItem(MAP_EMBED_URL_STORAGE_KEY);
+};
+
+const persistFlightInfo = (flightInfo: FlightInfo) => {
+  if (typeof window === 'undefined') {
+    return;
+  }
+
+  const normalizedFlightInfo = {
+    ...normalizeFlightInfo(flightInfo),
+  };
+
+  if (hasFlightSegmentData(normalizedFlightInfo.arrival) || hasFlightSegmentData(normalizedFlightInfo.departure)) {
+    window.localStorage.setItem(FLIGHT_INFO_STORAGE_KEY, JSON.stringify(normalizedFlightInfo));
+    return;
+  }
+
+  window.localStorage.removeItem(FLIGHT_INFO_STORAGE_KEY);
+};
+
+const persistItineraryNotes = (itineraryNotes: ItineraryNotes) => {
+  if (typeof window === 'undefined') {
+    return;
+  }
+
+  const normalizedNotes = normalizeItineraryNotes(itineraryNotes);
+
+  if (Object.keys(normalizedNotes).length > 0) {
+    window.localStorage.setItem(ITINERARY_NOTES_STORAGE_KEY, JSON.stringify(normalizedNotes));
+    return;
+  }
+
+  window.localStorage.removeItem(ITINERARY_NOTES_STORAGE_KEY);
+};
+
+const parseImportedLocalData = (rawText: string): LocalDataPayload => {
+  const parsed = JSON.parse(rawText) as unknown;
+
+  if (!isRecord(parsed)) {
+    throw new Error('Imported file must be a JSON object.');
+  }
+
+  if (parsed.version !== LOCAL_DATA_EXPORT_VERSION) {
+    throw new Error('Unsupported import file version.');
+  }
+
+  if (!isRecord(parsed.data)) {
+    throw new Error('Import file is missing the data payload.');
+  }
+
+  const { data } = parsed;
+
+  return createLocalDataPayload(
+    typeof data.mapEmbedUrl === 'string' ? data.mapEmbedUrl : '',
+    normalizeFlightInfo(data.flightInfo),
+    data.itineraryNotes,
+  );
+};
+
+const buildLocalDataExport = (payload: LocalDataPayload): LocalDataExportV1 => ({
+  version: LOCAL_DATA_EXPORT_VERSION,
+  exportedAt: new Date().toISOString(),
+  data: payload,
+});
+
+const formatExportFileTimestamp = (date: Date): string => {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  const hours = String(date.getHours()).padStart(2, '0');
+  const minutes = String(date.getMinutes()).padStart(2, '0');
+  const seconds = String(date.getSeconds()).padStart(2, '0');
+
+  return `${year}${month}${day}-${hours}${minutes}${seconds}`;
 };
 
 const hasFlightSegmentData = (segment: FlightSegment): boolean =>
@@ -252,26 +396,17 @@ export default function App() {
     return false;
   });
   const navRef = useRef<HTMLElement | null>(null);
+  const importFileInputRef = useRef<HTMLInputElement | null>(null);
   const [navHeight, setNavHeight] = useState(0);
+  const [isImportExportOpen, setIsImportExportOpen] = useState(false);
   const [isMapSettingsOpen, setIsMapSettingsOpen] = useState(false);
-  const [mapEmbedUrl, setMapEmbedUrl] = useState(() => {
-    if (typeof window !== 'undefined') {
-      return window.localStorage.getItem(MAP_EMBED_URL_STORAGE_KEY) ?? '';
-    }
-
-    return '';
-  });
-  const [mapEmbedDraft, setMapEmbedDraft] = useState(() => {
-    if (typeof window !== 'undefined') {
-      return window.localStorage.getItem(MAP_EMBED_URL_STORAGE_KEY) ?? '';
-    }
-
-    return '';
-  });
+  const [mapEmbedUrl, setMapEmbedUrl] = useState(() => readMapEmbedUrl());
+  const [mapEmbedDraft, setMapEmbedDraft] = useState(() => readMapEmbedUrl());
   const [flightInfo, setFlightInfo] = useState<FlightInfo>(() => loadFlightInfo());
   const [flightInfoDraft, setFlightInfoDraft] = useState<FlightInfo>(() => loadFlightInfo());
   const [itineraryNotes, setItineraryNotes] = useState<ItineraryNotes>(() => loadItineraryNotes());
   const [itineraryNotesDraft, setItineraryNotesDraft] = useState<ItineraryNotes>(() => loadItineraryNotes());
+  const [importExportMessage, setImportExportMessage] = useState<ImportExportMessage | null>(null);
   const [activeFlightEditor, setActiveFlightEditor] = useState<FlightSegmentKey | null>(null);
   const [activeItineraryNoteEditor, setActiveItineraryNoteEditor] = useState<string | null>(null);
   const [itineraryViewMode, setItineraryViewMode] = useState<ItineraryViewMode>('card');
@@ -376,20 +511,10 @@ export default function App() {
   }, [activeItineraryDay]);
 
   const applyMapEmbedUrl = () => {
-    if (typeof window === 'undefined') {
-      return;
-    }
-
     const trimmedUrl = mapEmbedDraft.trim();
 
     setMapEmbedUrl(trimmedUrl);
-
-    if (trimmedUrl) {
-      window.localStorage.setItem(MAP_EMBED_URL_STORAGE_KEY, trimmedUrl);
-      return;
-    }
-
-    window.localStorage.removeItem(MAP_EMBED_URL_STORAGE_KEY);
+    persistMapEmbedUrl(trimmedUrl);
   };
 
   const updateFlightDraft = (
@@ -407,10 +532,6 @@ export default function App() {
   };
 
   const applyFlightInfo = () => {
-    if (typeof window === 'undefined') {
-      return;
-    }
-
     const normalizedFlightInfo: FlightInfo = {
       arrival: normalizeFlightSegment(flightInfoDraft.arrival),
       departure: normalizeFlightSegment(flightInfoDraft.departure),
@@ -418,13 +539,7 @@ export default function App() {
 
     setFlightInfo(normalizedFlightInfo);
     setFlightInfoDraft(normalizedFlightInfo);
-
-    if (hasFlightSegmentData(normalizedFlightInfo.arrival) || hasFlightSegmentData(normalizedFlightInfo.departure)) {
-      window.localStorage.setItem(FLIGHT_INFO_STORAGE_KEY, JSON.stringify(normalizedFlightInfo));
-      return;
-    }
-
-    window.localStorage.removeItem(FLIGHT_INFO_STORAGE_KEY);
+    persistFlightInfo(normalizedFlightInfo);
   };
 
   const clearFlightInfo = () => {
@@ -432,10 +547,7 @@ export default function App() {
 
     setFlightInfo(emptyFlightInfo);
     setFlightInfoDraft(emptyFlightInfo);
-
-    if (typeof window !== 'undefined') {
-      window.localStorage.removeItem(FLIGHT_INFO_STORAGE_KEY);
-    }
+    persistFlightInfo(emptyFlightInfo);
   };
 
   const clearFlightSegment = (segmentKey: FlightSegmentKey) => {
@@ -447,14 +559,7 @@ export default function App() {
         [segmentKey]: emptySegment,
       };
 
-      if (typeof window !== 'undefined') {
-        if (hasFlightSegmentData(nextFlightInfo.arrival) || hasFlightSegmentData(nextFlightInfo.departure)) {
-          window.localStorage.setItem(FLIGHT_INFO_STORAGE_KEY, JSON.stringify(nextFlightInfo));
-        } else {
-          window.localStorage.removeItem(FLIGHT_INFO_STORAGE_KEY);
-        }
-      }
-
+      persistFlightInfo(nextFlightInfo);
       return nextFlightInfo;
     });
 
@@ -483,14 +588,7 @@ export default function App() {
         delete nextNotes[day];
       }
 
-      if (typeof window !== 'undefined') {
-        if (Object.keys(nextNotes).length > 0) {
-          window.localStorage.setItem(ITINERARY_NOTES_STORAGE_KEY, JSON.stringify(nextNotes));
-        } else {
-          window.localStorage.removeItem(ITINERARY_NOTES_STORAGE_KEY);
-        }
-      }
-
+      persistItineraryNotes(nextNotes);
       return nextNotes;
     });
 
@@ -511,15 +609,7 @@ export default function App() {
     setItineraryNotes((current) => {
       const nextNotes = { ...current };
       delete nextNotes[day];
-
-      if (typeof window !== 'undefined') {
-        if (Object.keys(nextNotes).length > 0) {
-          window.localStorage.setItem(ITINERARY_NOTES_STORAGE_KEY, JSON.stringify(nextNotes));
-        } else {
-          window.localStorage.removeItem(ITINERARY_NOTES_STORAGE_KEY);
-        }
-      }
-
+      persistItineraryNotes(nextNotes);
       return nextNotes;
     });
 
@@ -584,6 +674,76 @@ export default function App() {
 
   const clearSelectedMapTarget = () => {
     setSelectedMapTarget(null);
+  };
+
+  const applyImportedLocalData = (payload: LocalDataPayload) => {
+    setMapEmbedUrl(payload.mapEmbedUrl);
+    setMapEmbedDraft(payload.mapEmbedUrl);
+    setFlightInfo(payload.flightInfo);
+    setFlightInfoDraft(payload.flightInfo);
+    setItineraryNotes(payload.itineraryNotes);
+    setItineraryNotesDraft(payload.itineraryNotes);
+
+    persistMapEmbedUrl(payload.mapEmbedUrl);
+    persistFlightInfo(payload.flightInfo);
+    persistItineraryNotes(payload.itineraryNotes);
+  };
+
+  const exportLocalData = () => {
+    if (typeof window === 'undefined' || typeof document === 'undefined') {
+      return;
+    }
+
+    const payload = loadLocalDataPayload();
+    const exportData = buildLocalDataExport(payload);
+    const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
+    const objectUrl = window.URL.createObjectURL(blob);
+    const downloadLink = document.createElement('a');
+    downloadLink.href = objectUrl;
+    downloadLink.download = `nagoya-local-data-${formatExportFileTimestamp(new Date())}.json`;
+    downloadLink.click();
+    window.URL.revokeObjectURL(objectUrl);
+
+    setImportExportMessage({
+      type: 'success',
+      text: '已匯出目前裝置上的地圖、航班與行程筆記資料。',
+    });
+  };
+
+  const openImportFilePicker = () => {
+    setImportExportMessage(null);
+    setIsImportExportOpen(true);
+    importFileInputRef.current?.click();
+  };
+
+  const importLocalData = async (event: ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    event.target.value = '';
+
+    if (!file) {
+      return;
+    }
+
+    const shouldImport = window.confirm('匯入後會覆蓋目前裝置上的地圖、航班與行程筆記資料，確定要繼續嗎？');
+
+    if (!shouldImport) {
+      return;
+    }
+
+    try {
+      const rawText = await file.text();
+      const importedPayload = parseImportedLocalData(rawText);
+      applyImportedLocalData(importedPayload);
+      setImportExportMessage({
+        type: 'success',
+        text: '資料匯入完成，畫面已更新為匯入檔內容。',
+      });
+    } catch {
+      setImportExportMessage({
+        type: 'error',
+        text: '匯入失敗，請確認檔案是有效的匯出 JSON 格式。',
+      });
+    }
   };
 
   const renderItineraryNoteEditor = (day: string, compact = false) => {
@@ -1151,11 +1311,28 @@ export default function App() {
       )}
       {activeTab !== 'map' && (
         <header className="bg-white/95 backdrop-blur-md dark:bg-[#362F2B]/95 shadow-sm dark:shadow-[#2A2421]/50 sticky top-0 z-10">
-          <div className="max-w-3xl mx-auto px-4 py-3 flex items-center justify-between">
+          <div className="relative max-w-3xl mx-auto px-4 py-3 flex items-center justify-between">
             <div>
               <h1 className="font-bold text-lg text-[#4A3F35] dark:text-[#E2C07C] tracking-tight font-serif">名古屋親子遊</h1>
             </div>
             <div className="flex items-center gap-3">
+              <input
+                ref={importFileInputRef}
+                type="file"
+                accept=".json,application/json"
+                onChange={importLocalData}
+                className="hidden"
+                aria-label="匯入本機資料檔案"
+              />
+              <button
+                type="button"
+                onClick={() => setIsImportExportOpen((current) => !current)}
+                className="rounded-xl text-[#8C7A6B] hover:bg-[#F0E5E1] dark:text-[#A89F91] dark:hover:bg-[#4A3F35] transition-all duration-300 p-1.5"
+                aria-label={isImportExportOpen ? '關閉備份設定' : '開啟備份設定'}
+                aria-expanded={isImportExportOpen}
+              >
+                {isImportExportOpen ? <X className="transition-all duration-300 w-4 h-4" /> : <Settings2 className="transition-all duration-300 w-4 h-4" />}
+              </button>
               <button
                 onClick={() => setIsDarkMode(!isDarkMode)}
                 className="rounded-xl text-[#8C7A6B] hover:bg-[#F0E5E1] dark:text-[#A89F91] dark:hover:bg-[#4A3F35] transition-all duration-300 p-1.5"
@@ -1164,6 +1341,48 @@ export default function App() {
                 {isDarkMode ? <Sun className="transition-all duration-300 w-4 h-4" /> : <Moon className="transition-all duration-300 w-4 h-4" />}
               </button>
             </div>
+            {isImportExportOpen && (
+              <div className="absolute right-4 top-[calc(100%-0.25rem)] z-20 w-[min(24rem,calc(100vw-2rem))] rounded-3xl border border-[#E8DCC4] bg-white/95 p-4 shadow-2xl backdrop-blur-md dark:border-[#5C4D42] dark:bg-[#362F2B]/95">
+                <div className="space-y-3">
+                  <div className="space-y-1">
+                    <p className="text-sm font-semibold text-[#4A3F35] dark:text-[#FDF8F5]">本機資料備份</p>
+                    <p className="text-xs leading-5 text-[#8C7A6B] dark:text-[#A89F91]">
+                      匯出或匯入 local storage 內的地圖、航班與行程筆記資料
+                    </p>
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    <button
+                      type="button"
+                      onClick={exportLocalData}
+                      className="inline-flex items-center justify-center gap-2 rounded-xl border border-[#E8DCC4] bg-[#FAF5F0] px-4 py-2 text-sm font-medium text-[#6B5B4D] transition hover:border-[#D9A0A5] hover:text-[#4A3F35] dark:border-[#5C4D42] dark:bg-[#2A2421] dark:text-[#D1C4B5] dark:hover:border-[#E2C07C] dark:hover:text-[#FDF8F5]"
+                    >
+                      <Upload className="h-4 w-4" />
+                      匯出
+                    </button>
+                    <button
+                      type="button"
+                      onClick={openImportFilePicker}
+                      className="inline-flex items-center justify-center gap-2 rounded-xl bg-[#D9A0A5] px-4 py-2 text-sm font-medium text-white transition hover:bg-[#C88992] dark:bg-[#7A907A] dark:hover:bg-[#6A816A]"
+                    >
+                      <Download className="h-4 w-4" />
+                      匯入
+                    </button>
+                  </div>
+                  {importExportMessage && (
+                    <div
+                      className={`rounded-2xl border px-4 py-3 text-sm ${
+                        importExportMessage.type === 'success'
+                          ? 'border-[#DCE8D7] bg-[#F4FAF2] text-[#466044] dark:border-[#4E694E] dark:bg-[#2A362A] dark:text-[#C8DDC8]'
+                          : 'border-[#E9D3D6] bg-[#FFF5F6] text-[#8A4E55] dark:border-[#704248] dark:bg-[#3A2A2D] dark:text-[#E6C6CB]'
+                      }`}
+                      role="status"
+                    >
+                      {importExportMessage.text}
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
           </div>
         </header>
       )}
