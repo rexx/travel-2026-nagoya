@@ -275,17 +275,6 @@ const buildLocalDataExport = (payload: LocalDataPayload): LocalDataExportV1 => (
   data: payload,
 });
 
-const formatExportFileTimestamp = (date: Date): string => {
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, '0');
-  const day = String(date.getDate()).padStart(2, '0');
-  const hours = String(date.getHours()).padStart(2, '0');
-  const minutes = String(date.getMinutes()).padStart(2, '0');
-  const seconds = String(date.getSeconds()).padStart(2, '0');
-
-  return `${year}${month}${day}-${hours}${minutes}${seconds}`;
-};
-
 const hasFlightSegmentData = (segment: FlightSegment): boolean =>
   Object.values(segment).some((value) => value.trim().length > 0);
 
@@ -407,6 +396,7 @@ export default function App() {
   const [itineraryNotes, setItineraryNotes] = useState<ItineraryNotes>(() => loadItineraryNotes());
   const [itineraryNotesDraft, setItineraryNotesDraft] = useState<ItineraryNotes>(() => loadItineraryNotes());
   const [importExportMessage, setImportExportMessage] = useState<ImportExportMessage | null>(null);
+  const [exportedLocalDataText, setExportedLocalDataText] = useState('');
   const [activeFlightEditor, setActiveFlightEditor] = useState<FlightSegmentKey | null>(null);
   const [activeItineraryNoteEditor, setActiveItineraryNoteEditor] = useState<string | null>(null);
   const [itineraryViewMode, setItineraryViewMode] = useState<ItineraryViewMode>('card');
@@ -690,23 +680,13 @@ export default function App() {
   };
 
   const exportLocalData = () => {
-    if (typeof window === 'undefined' || typeof document === 'undefined') {
-      return;
-    }
-
     const payload = loadLocalDataPayload();
     const exportData = buildLocalDataExport(payload);
-    const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
-    const objectUrl = window.URL.createObjectURL(blob);
-    const downloadLink = document.createElement('a');
-    downloadLink.href = objectUrl;
-    downloadLink.download = `nagoya-local-data-${formatExportFileTimestamp(new Date())}.json`;
-    downloadLink.click();
-    window.URL.revokeObjectURL(objectUrl);
+    setExportedLocalDataText(JSON.stringify(exportData, null, 2));
 
     setImportExportMessage({
       type: 'success',
-      text: '已匯出目前裝置上的地圖、航班與行程筆記資料。',
+      text: '已產生可複製的匯出 JSON，請直接複製下方內容。',
     });
   };
 
@@ -1347,7 +1327,7 @@ export default function App() {
                   <div className="space-y-1">
                     <p className="text-sm font-semibold text-[#4A3F35] dark:text-[#FDF8F5]">本機資料備份</p>
                     <p className="text-xs leading-5 text-[#8C7A6B] dark:text-[#A89F91]">
-                      匯出或匯入 local storage 內的地圖、航班與行程筆記資料
+                      匯出時會直接顯示 JSON 文字，方便複製；匯入仍可使用 JSON 檔案
                     </p>
                   </div>
                   <div className="flex flex-wrap gap-2">
@@ -1368,6 +1348,19 @@ export default function App() {
                       匯入
                     </button>
                   </div>
+                  {exportedLocalDataText && (
+                    <div className="space-y-2">
+                      <p className="text-xs font-medium text-[#6B5B4D] dark:text-[#D1C4B5]">
+                        匯出內容
+                      </p>
+                      <textarea
+                        value={exportedLocalDataText}
+                        readOnly
+                        rows={10}
+                        className="w-full rounded-2xl border border-[#E8DCC4] bg-[#FAF5F0] px-3 py-3 text-xs leading-5 text-[#4A3F35] outline-none dark:border-[#5C4D42] dark:bg-[#2A2421] dark:text-[#FDF8F5]"
+                      />
+                    </div>
+                  )}
                   {importExportMessage && (
                     <div
                       className={`rounded-2xl border px-4 py-3 text-sm ${
