@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, type ChangeEvent } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { CalendarDays, CalendarCheck, UtensilsCrossed, Map, MapPin, Clock, Banknote, Info, Pencil, CloudRain, AlertCircle, CheckCircle2, BedDouble, Sun, Moon, CreditCard, Smartphone, MapPinned, Settings2, X, PlaneTakeoff, PlaneLanding, Trash2, Save, LayoutGrid, List, ChevronDown, WifiOff, ExternalLink, ArrowLeft, ChevronLeft, ChevronRight, Download, Upload } from 'lucide-react';
 import { itineraryData, itineraryDetailMap, foodData, attractionData, creditCardData, promoData, ePayData } from './data';
 import { motion, AnimatePresence } from 'motion/react';
@@ -385,7 +385,6 @@ export default function App() {
     return false;
   });
   const navRef = useRef<HTMLElement | null>(null);
-  const importFileInputRef = useRef<HTMLInputElement | null>(null);
   const [navHeight, setNavHeight] = useState(0);
   const [isImportExportOpen, setIsImportExportOpen] = useState(false);
   const [isMapSettingsOpen, setIsMapSettingsOpen] = useState(false);
@@ -397,6 +396,7 @@ export default function App() {
   const [itineraryNotesDraft, setItineraryNotesDraft] = useState<ItineraryNotes>(() => loadItineraryNotes());
   const [importExportMessage, setImportExportMessage] = useState<ImportExportMessage | null>(null);
   const [exportedLocalDataText, setExportedLocalDataText] = useState('');
+  const [importLocalDataText, setImportLocalDataText] = useState('');
   const [activeFlightEditor, setActiveFlightEditor] = useState<FlightSegmentKey | null>(null);
   const [activeItineraryNoteEditor, setActiveItineraryNoteEditor] = useState<string | null>(null);
   const [itineraryViewMode, setItineraryViewMode] = useState<ItineraryViewMode>('card');
@@ -690,20 +690,7 @@ export default function App() {
     });
   };
 
-  const openImportFilePicker = () => {
-    setImportExportMessage(null);
-    setIsImportExportOpen(true);
-    importFileInputRef.current?.click();
-  };
-
-  const importLocalData = async (event: ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    event.target.value = '';
-
-    if (!file) {
-      return;
-    }
-
+  const importLocalData = () => {
     const shouldImport = window.confirm('匯入後會覆蓋目前裝置上的地圖、航班與行程筆記資料，確定要繼續嗎？');
 
     if (!shouldImport) {
@@ -711,8 +698,7 @@ export default function App() {
     }
 
     try {
-      const rawText = await file.text();
-      const importedPayload = parseImportedLocalData(rawText);
+      const importedPayload = parseImportedLocalData(importLocalDataText);
       applyImportedLocalData(importedPayload);
       setImportExportMessage({
         type: 'success',
@@ -1296,14 +1282,6 @@ export default function App() {
               <h1 className="font-bold text-lg text-[#4A3F35] dark:text-[#E2C07C] tracking-tight font-serif">名古屋親子遊</h1>
             </div>
             <div className="flex items-center gap-3">
-              <input
-                ref={importFileInputRef}
-                type="file"
-                accept=".json,application/json"
-                onChange={importLocalData}
-                className="hidden"
-                aria-label="匯入本機資料檔案"
-              />
               <button
                 type="button"
                 onClick={() => setIsImportExportOpen((current) => !current)}
@@ -1327,7 +1305,7 @@ export default function App() {
                   <div className="space-y-1">
                     <p className="text-sm font-semibold text-[#4A3F35] dark:text-[#FDF8F5]">本機資料備份</p>
                     <p className="text-xs leading-5 text-[#8C7A6B] dark:text-[#A89F91]">
-                      匯出時會直接顯示 JSON 文字，方便複製；匯入仍可使用 JSON 檔案
+                      匯出與匯入都使用 JSON 文字框，方便直接複製與貼上
                     </p>
                   </div>
                   <div className="flex flex-wrap gap-2">
@@ -1341,7 +1319,7 @@ export default function App() {
                     </button>
                     <button
                       type="button"
-                      onClick={openImportFilePicker}
+                      onClick={importLocalData}
                       className="inline-flex items-center justify-center gap-2 rounded-xl bg-[#D9A0A5] px-4 py-2 text-sm font-medium text-white transition hover:bg-[#C88992] dark:bg-[#7A907A] dark:hover:bg-[#6A816A]"
                     >
                       <Download className="h-4 w-4" />
@@ -1361,6 +1339,18 @@ export default function App() {
                       />
                     </div>
                   )}
+                  <div className="space-y-2">
+                    <p className="text-xs font-medium text-[#6B5B4D] dark:text-[#D1C4B5]">
+                      匯入內容
+                    </p>
+                    <textarea
+                      value={importLocalDataText}
+                      onChange={(event) => setImportLocalDataText(event.target.value)}
+                      rows={10}
+                      placeholder="貼上匯出的 JSON 內容後，再按上方「匯入」"
+                      className="w-full rounded-2xl border border-[#E8DCC4] bg-[#FAF5F0] px-3 py-3 text-xs leading-5 text-[#4A3F35] outline-none transition focus:border-[#D9A0A5] focus:ring-2 focus:ring-[#D9A0A5]/20 dark:border-[#5C4D42] dark:bg-[#2A2421] dark:text-[#FDF8F5] dark:placeholder:text-[#8C7A6B] dark:focus:border-[#9EBA9E] dark:focus:ring-[#9EBA9E]/20"
+                    />
+                  </div>
                   {importExportMessage && (
                     <div
                       className={`rounded-2xl border px-4 py-3 text-sm ${
