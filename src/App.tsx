@@ -1105,7 +1105,7 @@ export default function App() {
             </div>
 
             <div>
-              <h2 className="text-2xl font-bold text-[#4A3F35] dark:text-[#FDF8F5] font-serif">{detail.theme}</h2>
+              <h2 className="text-base font-semibold text-[#4A3F35] dark:text-[#FDF8F5]">{detail.theme}</h2>
               <p className="mt-2 text-sm leading-7 text-[#6B5B4D] dark:text-[#D1C4B5]">{detail.intro}</p>
             </div>
 
@@ -1113,9 +1113,7 @@ export default function App() {
         </div>
 
         <div className="rounded-[28px] border border-[#F0E5E1] bg-white p-5 shadow-sm dark:border-[#4A3F35] dark:bg-[#362F2B]">
-          <h3 className="text-lg font-bold text-[#4A3F35] dark:text-[#FDF8F5] font-serif">當日行程</h3>
-
-          <div className="mt-5 space-y-4">
+          <div className="space-y-4">
             {detail.timeline.map((timelineItem) => {
               const itemKey = `${detail.day}-${timelineItem.time}-${timelineItem.activity}`;
               const hasDetails = Boolean(timelineItem.details?.length);
@@ -1130,7 +1128,7 @@ export default function App() {
                     {timelineItem.time}
                   </div>
                   <div className="space-y-2">
-                    <p className="text-sm font-semibold leading-6 text-[#4A3F35] dark:text-[#FDF8F5]">{timelineItem.activity}</p>
+                    <p className="text-lg font-semibold leading-7 text-[#4A3F35] dark:text-[#FDF8F5] font-serif">{timelineItem.activity}</p>
                     {timelineItem.note && (
                       <p className="text-sm leading-6 text-[#6B5B4D] dark:text-[#D1C4B5]">{timelineItem.note}</p>
                     )}
